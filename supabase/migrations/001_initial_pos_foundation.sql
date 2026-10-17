@@ -15,8 +15,9 @@ CREATE TABLE organizations (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Application profile keyed to the authenticated Supabase Auth identity.
 CREATE TABLE users (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   organization_id uuid NOT NULL REFERENCES organizations(id),
   full_name text NOT NULL,
   email text NOT NULL,
