@@ -390,7 +390,7 @@ CREATE TABLE idempotency_records (
 CREATE TABLE sync_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES organizations(id),
-  device_id uuid NOT NULL REFERENCES devices(id),
+  device_id uuid NOT NULL,
   batch_id uuid NOT NULL,
   status text NOT NULL DEFAULT 'received' CHECK (status IN ('received','processing','completed','partial','failed')),
   submitted_count integer NOT NULL DEFAULT 0,
@@ -399,7 +399,8 @@ CREATE TABLE sync_batches (
   result jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   completed_at timestamptz,
-  UNIQUE (organization_id, batch_id)
+  UNIQUE (organization_id, batch_id),
+  FOREIGN KEY (organization_id, device_id) REFERENCES devices(organization_id, id)
 );
 
 CREATE TABLE audit_logs (
