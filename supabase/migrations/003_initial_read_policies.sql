@@ -43,6 +43,32 @@ RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = ''
 AS $$
+  -- Historical reads remain available for authorized members after a branch
+  -- is deactivated. Use kt_can_operate_branch for new operational actions.
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.branches b
+    WHERE b.id = p_branch_id
+      AND b.organization_id = public.kt_current_org_id()
+      AND (
+        public.kt_is_org_admin()
+        OR EXISTS (
+          SELECT 1
+          FROM public.branch_memberships bm
+          WHERE bm.organization_id = b.organization_id
+            AND bm.branch_id = b.id
+            AND bm.user_id = (SELECT auth.uid())
+            AND bm.is_active = true
+        )
+      )
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION public.kt_can_operate_branch(p_branch_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = ''
+AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.branches b
@@ -57,6 +83,7 @@ AS $$
           WHERE bm.organization_id = b.organization_id
             AND bm.branch_id = b.id
             AND bm.user_id = (SELECT auth.uid())
+            AND bm.is_active = true
         )
       )
   )
@@ -66,10 +93,12 @@ REVOKE ALL ON FUNCTION public.kt_current_org_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.kt_current_role() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.kt_is_org_admin() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.kt_can_access_branch(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.kt_can_operate_branch(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.kt_current_org_id() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.kt_current_role() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.kt_is_org_admin() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.kt_can_access_branch(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.kt_can_operate_branch(uuid) TO authenticated;
 
 -- Organization and user profiles.
 CREATE POLICY org_read_own ON public.organizations
@@ -295,5 +324,63 @@ CREATE POLICY audit_log_read_admin ON public.audit_logs
 -- Intentionally no client-facing policies for provider events or idempotency
 -- records. They are server-managed. There are also no INSERT/UPDATE/DELETE
 -- policies yet: those operations remain denied to authenticated clients.
+
+
+-- Explicit table privileges complement RLS. Clients receive SELECT only on
+-- tables with reviewed read policies; provider events and idempotency records
+-- remain server-managed. No client role receives direct write privileges.
+REVOKE ALL ON TABLE
+  public.organizations,
+  public.users,
+  public.branches,
+  public.branch_memberships,
+  public.devices,
+  public.services,
+  public.branch_service_prices,
+  public.barbers,
+  public.barber_branch_assignments,
+  public.commission_tiers,
+  public.commission_tier_versions,
+  public.barber_commission_assignments,
+  public.cash_shifts,
+  public.sales,
+  public.sale_items,
+  public.payments,
+  public.payment_provider_events,
+  public.commission_entries,
+  public.commission_review_cases,
+  public.commission_payouts,
+  public.commission_payout_items,
+  public.sale_adjustments,
+  public.idempotency_records,
+  public.sync_batches,
+  public.audit_logs
+FROM PUBLIC, anon, authenticated;
+
+GRANT SELECT ON TABLE
+  public.organizations,
+  public.users,
+  public.branches,
+  public.branch_memberships,
+  public.devices,
+  public.services,
+  public.branch_service_prices,
+  public.barbers,
+  public.barber_branch_assignments,
+  public.commission_tiers,
+  public.commission_tier_versions,
+  public.barber_commission_assignments,
+  public.cash_shifts,
+  public.sales,
+  public.sale_items,
+  public.payments,
+  public.commission_entries,
+  public.commission_review_cases,
+  public.commission_payouts,
+  public.commission_payout_items,
+  public.sale_adjustments,
+  public.sync_batches,
+  public.audit_logs
+TO authenticated;
 
 COMMIT;
