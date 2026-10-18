@@ -131,22 +131,13 @@ CREATE POLICY barber_read_org ON public.barbers
   FOR SELECT TO authenticated
   USING (organization_id = (SELECT public.kt_current_org_id()));
 
-CREATE POLICY barber_branch_assignment_read_org ON public.barber_branch_assignments
+CREATE POLICY barber_branch_assignment_read_authorized ON public.barber_branch_assignments
   FOR SELECT TO authenticated
   USING (
     organization_id = (SELECT public.kt_current_org_id())
     AND (
       (SELECT public.kt_is_org_admin())
       OR (SELECT public.kt_can_access_branch(branch_id))
-      OR barber_id IN (
-        SELECT b.id FROM public.barbers b
-        WHERE b.organization_id = (SELECT public.kt_current_org_id())
-          AND EXISTS (
-            SELECT 1 FROM public.branch_memberships bm
-            WHERE bm.organization_id = b.organization_id
-              AND bm.user_id = (SELECT auth.uid())
-          )
-      )
     )
   );
 
@@ -229,19 +220,6 @@ CREATE POLICY commission_entry_read_admin_or_branch_manager ON public.commission
             AND (SELECT public.kt_can_access_branch(s.branch_id))
         )
       )
-      OR (
-        barber_id IN (
-          SELECT b.id FROM public.barbers b
-          WHERE b.organization_id = (SELECT public.kt_current_org_id())
-            AND b.full_name IS NOT NULL
-        )
-        AND (SELECT public.kt_current_role()) = 'barber'
-        AND EXISTS (
-          SELECT 1 FROM public.users u
-          WHERE u.id = (SELECT auth.uid())
-            AND u.organization_id = commission_entries.organization_id
-        )
-      )
     )
   );
 
@@ -251,26 +229,26 @@ CREATE POLICY commission_review_read_admin_manager ON public.commission_review_c
     organization_id = (SELECT public.kt_current_org_id())
     AND (
       (SELECT public.kt_is_org_admin())
-      OR (SELECT public.kt_current_role()) = 'manager'
-    )
-  );
-
-CREATE POLICY commission_payout_read_admin_or_own_barber ON public.commission_payouts
-  FOR SELECT TO authenticated
-  USING (
-    organization_id = (SELECT public.kt_current_org_id())
-    AND (
-      (SELECT public.kt_is_org_admin())
       OR (
-        (SELECT public.kt_current_role()) = 'barber'
+        (SELECT public.kt_current_role()) = 'manager'
         AND EXISTS (
-          SELECT 1 FROM public.barbers b
-          WHERE b.id = commission_payouts.barber_id
-            AND b.organization_id = commission_payouts.organization_id
-            AND b.full_name IS NOT NULL
+          SELECT 1
+          FROM public.commission_entries ce
+          JOIN public.sales s ON s.id = ce.sale_id
+            AND s.organization_id = ce.organization_id
+          WHERE ce.id = commission_review_cases.commission_entry_id
+            AND ce.organization_id = commission_review_cases.organization_id
+            AND (SELECT public.kt_can_access_branch(s.branch_id))
         )
       )
     )
+  );
+
+CREATE POLICY commission_payout_read_admin ON public.commission_payouts
+  FOR SELECT TO authenticated
+  USING (
+    organization_id = (SELECT public.kt_current_org_id())
+    AND (SELECT public.kt_is_org_admin())
   );
 
 CREATE POLICY commission_payout_item_read_admin ON public.commission_payout_items
