@@ -44,6 +44,7 @@ CREATE TABLE branch_memberships (
   organization_id uuid NOT NULL,
   branch_id uuid NOT NULL,
   user_id uuid NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (branch_id, user_id),
   FOREIGN KEY (organization_id, branch_id) REFERENCES branches(organization_id, id),
@@ -247,10 +248,19 @@ CREATE TABLE sale_items (
   FOREIGN KEY (organization_id, barber_id) REFERENCES barbers(organization_id, id),
   FOREIGN KEY (organization_id, commission_tier_version_id_snapshot)
     REFERENCES commission_tier_versions(organization_id, id),
+  CHECK (gross_amount = unit_price_amount * quantity),
   CHECK (commission_basis_amount = gross_amount - discount_amount),
   CHECK (
     (commission_tier_version_id_snapshot IS NULL AND commission_rate_bps_snapshot IS NULL)
     OR (commission_tier_version_id_snapshot IS NOT NULL AND commission_rate_bps_snapshot IS NOT NULL)
+  ),
+  CHECK (
+    (commission_rate_bps_snapshot IS NULL AND commission_amount = 0)
+    OR (
+      commission_rate_bps_snapshot IS NOT NULL
+      AND commission_amount =
+        ((commission_basis_amount * commission_rate_bps_snapshot + 5000) / 10000)
+    )
   )
 );
 
