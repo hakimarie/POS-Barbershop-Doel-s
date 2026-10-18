@@ -4,7 +4,10 @@
 
 BEGIN;
 
-CREATE OR REPLACE FUNCTION public.kt_guard_cash_shift_device_branch()
+-- Keep SECURITY DEFINER trigger functions outside Supabase's exposed public schema.
+CREATE SCHEMA IF NOT EXISTS private;
+
+CREATE OR REPLACE FUNCTION private.kt_guard_cash_shift_device_branch()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -33,18 +36,18 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.kt_guard_cash_shift_device_branch() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.kt_guard_cash_shift_device_branch() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION private.kt_guard_cash_shift_device_branch() FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.kt_guard_cash_shift_device_branch() FROM anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_guard_cash_shift_device_branch ON public.cash_shifts;
 CREATE TRIGGER trg_guard_cash_shift_device_branch
 BEFORE INSERT OR UPDATE OF organization_id, branch_id, device_id
 ON public.cash_shifts
 FOR EACH ROW
-EXECUTE FUNCTION public.kt_guard_cash_shift_device_branch();
+EXECUTE FUNCTION private.kt_guard_cash_shift_device_branch();
 
 
-CREATE OR REPLACE FUNCTION public.kt_guard_sale_shift_device_branch()
+CREATE OR REPLACE FUNCTION private.kt_guard_sale_shift_device_branch()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -91,18 +94,18 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.kt_guard_sale_shift_device_branch() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.kt_guard_sale_shift_device_branch() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION private.kt_guard_sale_shift_device_branch() FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.kt_guard_sale_shift_device_branch() FROM anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_guard_sale_shift_device_branch ON public.sales;
 CREATE TRIGGER trg_guard_sale_shift_device_branch
 BEFORE INSERT OR UPDATE OF organization_id, branch_id, shift_id, device_id
 ON public.sales
 FOR EACH ROW
-EXECUTE FUNCTION public.kt_guard_sale_shift_device_branch();
+EXECUTE FUNCTION private.kt_guard_sale_shift_device_branch();
 
 
-CREATE OR REPLACE FUNCTION public.kt_guard_commission_entry_matches_sale_item()
+CREATE OR REPLACE FUNCTION private.kt_guard_commission_entry_matches_sale_item()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -157,14 +160,14 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.kt_guard_commission_entry_matches_sale_item() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.kt_guard_commission_entry_matches_sale_item() FROM anon, authenticated;
+REVOKE ALL ON FUNCTION private.kt_guard_commission_entry_matches_sale_item() FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.kt_guard_commission_entry_matches_sale_item() FROM anon, authenticated;
 
 DROP TRIGGER IF EXISTS trg_guard_commission_entry_matches_sale_item ON public.commission_entries;
 CREATE TRIGGER trg_guard_commission_entry_matches_sale_item
 BEFORE INSERT OR UPDATE OF organization_id, sale_id, sale_item_id, barber_id, basis_amount, rate_bps, commission_amount
 ON public.commission_entries
 FOR EACH ROW
-EXECUTE FUNCTION public.kt_guard_commission_entry_matches_sale_item();
+EXECUTE FUNCTION private.kt_guard_commission_entry_matches_sale_item();
 
 COMMIT;
