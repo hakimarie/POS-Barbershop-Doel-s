@@ -153,7 +153,8 @@ BEGIN
     v_commission_amount
   FROM public.sale_items AS si
   WHERE si.id = NEW.sale_item_id
-    AND si.organization_id = NEW.organization_id;
+    AND si.organization_id = NEW.organization_id
+  FOR SHARE;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Commission entry sale item does not belong to this organization'
@@ -221,7 +222,11 @@ BEGIN
       USING ERRCODE = '23503';
   END IF;
 
-  IF v_sale_status IN ('paid', 'partially_refunded', 'refunded', 'cancelled', 'review_required')
+  IF (TG_OP = 'UPDATE' AND (
+        NEW.sale_id IS DISTINCT FROM OLD.sale_id
+        OR NEW.organization_id IS DISTINCT FROM OLD.organization_id
+      ))
+     OR v_sale_status IN ('paid', 'partially_refunded', 'refunded', 'cancelled', 'review_required')
      OR EXISTS (
        SELECT 1
        FROM public.commission_entries AS ce
