@@ -65,6 +65,7 @@ Use only disposable test fixtures in staging. These are negative tests: each inv
 - [ ] A sale whose branch or device does not match its shift is rejected.
 - [ ] A sale whose device belongs to a different branch is rejected.
 - [ ] A new online sale against a closed/review-required shift is rejected.
+- [ ] A second shift cannot be opened on a device while its prior shift is open or awaiting review.
 - [ ] A delayed offline sale within its shift's open/close timestamps is forced to `review_required` and `conflict`; verify sync flags/timestamps are assigned by trusted server code, not blindly accepted from the client.
 - [ ] A delayed offline sale outside the shift window is rejected for manual reconciliation.
 - [ ] A commission entry whose sale, barber, basis, rate, or amount differs from the source sale-item snapshot is rejected.
