@@ -192,8 +192,9 @@ CREATE TABLE cash_shifts (
   FOREIGN KEY (organization_id, closed_by) REFERENCES users(organization_id, id),
   CHECK ((status = 'open' AND closed_at IS NULL) OR (status <> 'open' AND closed_at IS NOT NULL))
 );
-CREATE UNIQUE INDEX one_open_shift_per_device
-  ON cash_shifts(device_id) WHERE status = 'open';
+-- A shift awaiting reconciliation still blocks a second shift on the same device.
+CREATE UNIQUE INDEX one_active_shift_per_device
+  ON cash_shifts(device_id) WHERE status IN ('open', 'review_required');
 
 CREATE TABLE sales (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
