@@ -1,13 +1,15 @@
 # Database Security Review — Barber POS
 
 Status: **pre-implementation review; not production-ready**  
-Scope: `supabase/migrations/001_initial_pos_foundation.sql` and the RLS lockdown migration.
+Scope: migrations 001–003 and the initial Next.js scaffold.
 
 ## Immediate safety rule
 
-Do not execute migration 001 by itself. Migration 001 creates application tables but does not enable Row Level Security (RLS). Migration 002 enables RLS on every table and deliberately creates no client-access policies yet. Until least-privilege policies are reviewed and added, Supabase `anon` and `authenticated` access is expected to be denied. This is a safe interim lock, not a usable application authorization configuration.
+Do not execute migration 001 by itself. Migration 001 creates application tables but does not enable Row Level Security (RLS). Migration 002 enables RLS on every application table without client policies; migration 003 adds a limited SELECT-only policy baseline. Even with migration 003, client writes remain denied, and the policies have not been tested against the actual Supabase project.
 
 Apply migrations only in a controlled review/staging step, in order. Do not expose a Supabase service-role key to the browser. Service-role access bypasses RLS and must remain server-side and narrowly scoped.
+
+Use the [staging validation checklist](staging-validation-checklist.md) for preflight checks, schema/RLS inventory, and the role-based test matrix.
 
 ## Confirmed product rules to preserve
 
@@ -22,41 +24,45 @@ Apply migrations only in a controlled review/staging step, in order. Do not expo
 
 ## Findings to resolve before production
 
-1. **RLS policies are absent in migration 001.** Migration 002 enables RLS without adding policies, so authenticated app access remains locked until explicit policies are implemented.
+1. **RLS policy baseline is incomplete.** Migration 002 enables RLS; migration 003 adds only SELECT policies. No client INSERT/UPDATE/DELETE operations are authorized. This is intentionally fail-closed, but the app is not yet usable for transactional POS workflows.
 2. **Role and branch authorization must be enforced server-side and in RLS.** Do not trust a role, organization ID, branch ID, price, commission rate, or payment status supplied by the browser.
-3. **Cross-entity consistency needs stronger enforcement or transactional validation.** The current foreign keys prove that referenced rows belong to an organization, but do not fully guarantee that a sale's shift and device belong to the same branch, or that every sale item uses a service/barber valid for that branch at transaction time.
+3. **Cross-entity consistency needs stronger enforcement or transactional validation.** Current foreign keys do not fully guarantee that a sale's shift and device belong to the same branch, or that every sale item uses a service/barber valid for that branch at transaction time.
 4. **Provider events are global and have no organization ID.** Keep `payment_provider_events` server-only; validate provider signatures and event idempotency before changing payment/sale state.
 5. **Commission payout semantics need a business decision.** `UNIQUE (commission_entry_id)` in `commission_payout_items` permits a commission entry to be paid in only one payout. Keep it only if partial/split payouts are explicitly prohibited.
 6. **Offline sync needs a trusted server transaction.** The browser must not directly mark a payment as paid, approve a commission, close a shift, or bypass a stale-configuration review. Use authenticated server endpoints/RPC with idempotency and audit logging.
-7. **Money and totals need transactional validation.** Recalculate line totals, allocated discounts, sale totals, payment sums, and commissions on the server; do not rely only on client-calculated values or CHECK constraints.
+7. **Money and totals need transactional validation.** Recalculate line totals, allocated discounts, sale totals, payment sums, refunds, and commissions on the server; do not rely only on client-calculated values or CHECK constraints.
 8. **Authentication lifecycle needs handling.** The `users` profile references `auth.users`; onboarding must create the organization/profile through a controlled server-side flow and must not let a user self-assign the owner role.
+9. **Barber identity mapping is missing.** There is no explicit link between a barber record and a Supabase Auth identity. Do not infer the link from names, phone numbers, or organization membership. Barber self-service commission/payout access must wait until a validated mapping exists.
+
+## Migration and policy status
+
+- Migration 001 creates the core schema and indexes.
+- Migration 002 enables RLS across the 25 application tables and intentionally creates no policies.
+- Migration 003 adds fixed-`search_path` SECURITY DEFINER helpers and initial organization/branch-scoped SELECT policies. PUBLIC execution is revoked from these helpers; execute is granted to `authenticated`.
+- The helper functions and policies have **not** been run against the Supabase project or validated with automated tests.
+- PostgreSQL extensions `pgcrypto` and `btree_gist` are installed in the project.
+- Migration 001 has not been applied to the Supabase database as of the latest user confirmation.
+- The Next.js UI is a scaffold, not a connected or tested POS.
+
+## RLS baseline limitations
+
+- No client-facing INSERT/UPDATE/DELETE policies have been added.
+- `payment_provider_events` and `idempotency_records` remain server-managed and have no client policies.
+- Commission tier configuration and payout records are restricted to organization owner/admin in the initial read baseline.
+- Manager commission/review access is scoped through authorized branch membership.
+- The current schema does not grant barber self-service access to their own commission/payout records.
+- RLS enabled is not proof of security. Tests must execute as realistic authenticated identities, not only as the privileged SQL editor role.
 
 ## Required next implementation steps
 
-1. Add narrowly scoped RLS helper functions with a fixed `search_path`, and policies based on authenticated user membership, role, and branch membership.
-2. Keep payment-provider event ingestion, commission approval/payout, and privileged setup operations server-only.
-3. Add database constraints or server-side transactional checks for shift/device/branch consistency and valid service/barber assignments.
+1. Validate migrations 001–003 in a disposable/staging Supabase project using the [staging validation checklist](staging-validation-checklist.md).
+2. Add automated RLS tests for cross-organization denial, cross-branch denial, owner access across branches, inactive users, missing profiles, and role boundaries.
+3. Add database constraints and/or transactional server checks for shift/device/branch consistency and valid service/barber assignments.
 4. Decide whether commission payouts can be split; adjust the uniqueness rule if partial payouts are required.
-5. Add tests for cross-organization access denial, cross-branch access denial, owner access across all branches, idempotent offline retries, stale commission config, and duplicate payment webhooks.
-6. Only then run the reviewed migrations against the Supabase project and verify table/RLS state.
+5. Design trusted transactional endpoints/RPCs for sale creation, shift lifecycle, offline sync, payment confirmation, commission approval, and payout. Keep privileged operations server-side and log them.
+6. Add explicit barber-user mapping before implementing barber self-service policies.
+7. Only after review and staging tests pass, consider applying migrations to the intended production project and verify table/RLS state.
 
-## Current status
+## Release gate
 
-- PostgreSQL extensions `pgcrypto` and `btree_gist` are installed in the project.
-- Migration 001 has not been applied to the Supabase database as of the latest user confirmation.
-- Migration 002 is a fail-closed RLS baseline; it is not the final policy set.
-- The Next.js UI is a scaffold, not a connected or tested POS.
-
-
-## RLS read-policy baseline added
-
-Migration `003_initial_read_policies.sql` now adds fixed-`search_path` SECURITY DEFINER helper functions and initial organization/branch-scoped **SELECT** policies. The helper functions are executable only by `authenticated` (PUBLIC execution revoked). Migration 003 assumes migrations 001 and 002 have already been applied.
-
-Important limitations:
-- This is a read-policy baseline, not final authorization approval. No client-facing INSERT/UPDATE/DELETE policies have been added; client writes remain denied by default.
-- Payment provider events and idempotency records remain server-managed and have no client policies.
-- The current schema does not link a barber record to a Supabase user identity. Therefore barber self-service access to their own commission/payout records is deliberately not granted yet. Add an explicit, validated barber-user mapping before implementing those policies; do not infer identity from names or organization membership.
-- Manager access to commission review is scoped through the manager's branch memberships.
-- The helpers and policies have not yet been executed against the Supabase database or validated with automated tests.
-
-Before applying in Supabase, review SQL syntax and run migrations in order in a disposable/staging project. Then add automated tests for cross-organization denial, cross-branch denial, inactive users, missing profiles, and role boundaries. Do not apply migrations 001–003 to the live project until this review and staging validation are complete.
+**Do not treat this branch as production-ready.** Do not apply migrations 001–003 to the live project yet. No production writes, QRIS integration, or offline-sync rollout should proceed until schema validation, authorization tests, transactional server logic, and the remaining business decisions are complete.
