@@ -53,7 +53,8 @@ After migrations have been reviewed and applied in staging:
 - [ ] Confirm expected application tables exist.
 - [ ] Confirm RLS is enabled for all application tables.
 - [ ] Confirm helper functions have the intended privileges and an empty `search_path`.
-- [ ] Confirm the three integrity triggers from migration 004 exist and are enabled.
+- [ ] Confirm authenticated has SELECT only on tables with read policies; provider events and idempotency records have no client table privileges.
+- [ ] Confirm the integrity triggers from migration 004 exist and are enabled, including sale-item immutability.
 - [ ] Confirm no client INSERT/UPDATE/DELETE policy has been added unintentionally.
 
 ## 3. Integrity guard tests
@@ -63,8 +64,14 @@ Use only disposable test fixtures in staging. These are negative tests: each inv
 - [ ] A cash shift whose device belongs to a different branch is rejected.
 - [ ] A sale whose branch or device does not match its shift is rejected.
 - [ ] A sale whose device belongs to a different branch is rejected.
+- [ ] A new online sale against a closed/review-required shift is rejected.
+- [ ] A delayed offline sale within its shift's open/close timestamps is forced to `review_required` and `conflict`; verify sync flags/timestamps are assigned by trusted server code, not blindly accepted from the client.
+- [ ] A delayed offline sale outside the shift window is rejected for manual reconciliation.
 - [ ] A commission entry whose sale, barber, basis, rate, or amount differs from the source sale-item snapshot is rejected.
-- [ ] A commission entry cannot be created when the source sale item has no saved commission rate snapshot.
+- [ ] Commission arithmetic uses the agreed half-up rounding formula.
+- [ ] A finalized sale item or an item with a commission entry cannot be updated/deleted; corrections use adjustments/reversals.
+- [ ] An inactive branch remains readable for authorized historical reporting, but cannot be used for new operations through the dedicated operation helper.
+- [ ] Setting a branch membership to inactive removes branch access.
 
 Also verify valid matching records can be inserted by the approved server-side path. Do not test by granting broad client write access.
 
@@ -77,7 +84,8 @@ Also verify valid matching records can be inserted by the approved server-side p
 - [ ] Verify offline sync idempotency, stale configuration review, duplicate submissions, and conflict handling.
 - [ ] Verify QRIS signature validation, replay protection, event idempotency, and payment reconciliation after a provider is selected.
 - [ ] Decide whether partial commission payouts are allowed; current schema has `UNIQUE (commission_entry_id)` in `commission_payout_items`, so one commission entry cannot be split across multiple payouts.
-- [ ] Verify cross-entity invariants not covered by the current triggers, including barber/service eligibility at transaction time and sale totals versus sale items/payments.
+- [ ] Verify cross-entity invariants not covered by the current triggers, including barber/service eligibility at transaction time, sale totals versus sale items/payments, and verified QRIS events.
+- [ ] Verify a closed-shift offline record cannot be forged merely by setting client-supplied timestamps or sync flags; server-side sync authentication and idempotency are mandatory.
 - [ ] Run automated migration tests and a full application build before production rollout.
 
 ## Current project state
