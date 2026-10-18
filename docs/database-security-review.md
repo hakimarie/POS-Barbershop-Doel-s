@@ -46,3 +46,17 @@ Apply migrations only in a controlled review/staging step, in order. Do not expo
 - Migration 001 has not been applied to the Supabase database as of the latest user confirmation.
 - Migration 002 is a fail-closed RLS baseline; it is not the final policy set.
 - The Next.js UI is a scaffold, not a connected or tested POS.
+
+
+## RLS read-policy baseline added
+
+Migration `003_initial_read_policies.sql` now adds fixed-`search_path` SECURITY DEFINER helper functions and initial organization/branch-scoped **SELECT** policies. The helper functions are executable only by `authenticated` (PUBLIC execution revoked). Migration 003 assumes migrations 001 and 002 have already been applied.
+
+Important limitations:
+- This is a read-policy baseline, not final authorization approval. No client-facing INSERT/UPDATE/DELETE policies have been added; client writes remain denied by default.
+- Payment provider events and idempotency records remain server-managed and have no client policies.
+- The current schema does not link a barber record to a Supabase user identity. Therefore barber self-service access to their own commission/payout records is deliberately not granted yet. Add an explicit, validated barber-user mapping before implementing those policies; do not infer identity from names or organization membership.
+- Manager access to commission review is scoped through the manager's branch memberships.
+- The helpers and policies have not yet been executed against the Supabase database or validated with automated tests.
+
+Before applying in Supabase, review SQL syntax and run migrations in order in a disposable/staging project. Then add automated tests for cross-organization denial, cross-branch denial, inactive users, missing profiles, and role boundaries. Do not apply migrations 001–003 to the live project until this review and staging validation are complete.
