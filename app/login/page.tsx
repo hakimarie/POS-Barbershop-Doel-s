@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -97,5 +97,14 @@ export default function LoginPage() {
         <p className="auth-footnote">Akses hanya untuk pengguna yang dibuat oleh administrator. Registrasi publik tidak tersedia.</p>
       </section>
     </main>
+  );
+}
+
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="auth-shell"><section className="auth-card" aria-busy="true">Memuat halaman login...</section></main>}>
+      <LoginContent />
+    </Suspense>
   );
 }
