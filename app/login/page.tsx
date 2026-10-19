@@ -63,7 +63,8 @@ export default function LoginPage() {
           </div>
         ) : null}
 
-        {callbackFailed ? <div className="auth-alert" role="alert">Sesi autentikasi tidak berhasil diverifikasi. Silakan masuk kembali.</div> : null}\n        {message ? <div className="auth-alert" role="alert">{message}</div> : null}
+        {callbackFailed ? <div className="auth-alert" role="alert">Sesi autentikasi tidak berhasil diverifikasi. Silakan masuk kembali.</div> : null}
+        {message ? <div className="auth-alert" role="alert">{message}</div> : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label htmlFor="email">Email</label>
