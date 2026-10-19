@@ -40,11 +40,11 @@ async function getWorkspaceContext() {
       return { profile: null, organizationName: null, branches: [], devices: [], error: "Profil belum dapat dibaca. Periksa policy RLS dan konfigurasi Supabase." };
     }
     if (!data) {
-      return { profile: null, organizationName: null, branches: [], error: "Akun login belum terhubung ke profil POS. Admin perlu membuat baris users dengan ID yang sama dengan Supabase Auth." };
+      return { profile: null, organizationName: null, branches: [], devices: [], error: "Akun login belum terhubung ke profil POS. Admin perlu membuat baris users dengan ID yang sama dengan Supabase Auth." };
     }
     const profile = data as WorkspaceProfile;
     if (!profile.is_active) {
-      return { profile, organizationName: null, branches: [], error: "Profil POS ini dinonaktifkan. Hubungi administrator." };
+      return { profile, organizationName: null, branches: [], devices: [], error: "Profil POS ini dinonaktifkan. Hubungi administrator." };
     }
     const [{ data: org }, { data: branchData, error: branchError }, { data: deviceData, error: deviceError }] = await Promise.all([
       supabase.from("organizations").select("name").eq("id", profile.organization_id).maybeSingle(),
@@ -56,7 +56,7 @@ async function getWorkspaceContext() {
     }
     return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], devices: (deviceData ?? []) as WorkspaceDevice[], error: null };
   } catch {
-    return { profile: null, organizationName: null, branches: [], error: "Supabase belum siap atau konfigurasi server belum lengkap." };
+    return { profile: null, organizationName: null, branches: [], devices: [], error: "Supabase belum siap atau konfigurasi server belum lengkap." };
   }
 }
 
