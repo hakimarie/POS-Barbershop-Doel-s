@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { openCashShift } from "@/app/actions/cash-shift";
 
 type Branch = { id: string; code: string; name: string };
@@ -16,7 +16,7 @@ export default function OpenCashShiftForm({ branches, devices }: { branches: Bra
 
   const branchDevices = devices.filter((device) => device.branch_id === branchId);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     setSuccess(false);
