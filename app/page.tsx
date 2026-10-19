@@ -123,6 +123,9 @@ export default async function HomePage() {
               )}
             </section>
           )}
+          {!workspace.error ? (
+            <OpenCashShiftForm branches={workspace.branches} devices={workspace.devices} />
+          ) : null}
           <div className="notice">
             <div className="notice-icon">i</div>
             <div><strong>Fondasi aplikasi sudah disiapkan</strong><p>Angka di bawah adalah placeholder. Data penjualan nyata baru ditampilkan setelah Supabase dikonfigurasi dan alur transaksi diuji.</p></div>
