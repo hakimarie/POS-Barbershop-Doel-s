@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SignOutButton from "@/components/auth/sign-out-button";
 import OpenCashShiftForm from "@/components/shifts/open-cash-shift-form";
 import { createClient } from "@/lib/supabase/server";
@@ -77,7 +78,7 @@ export default async function HomePage() {
           <a className="nav-item" href="#transaksi"><span>↔</span> Transaksi</a>
           <a className="nav-item" href="#shift"><span>◷</span> Shift kasir</a>
           <a className="nav-item" href="#barber"><span>♙</span> Barber & komisi</a>
-          <a className="nav-item" href="#layanan"><span>◇</span> Layanan & harga</a>
+          <Link className="nav-item" href="/layanan"><span>◇</span> Layanan & harga</Link>
           <a className="nav-item" href="#cabang"><span>⌖</span> Cabang</a>
           <a className="nav-item" href="#laporan"><span>▤</span> Laporan</a>
         </nav>
