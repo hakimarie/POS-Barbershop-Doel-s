@@ -1,4 +1,5 @@
 import SignOutButton from "@/components/auth/sign-out-button";
+import OpenCashShiftForm from "@/components/shifts/open-cash-shift-form";
 import { createClient } from "@/lib/supabase/server";
 
 const stats = [
@@ -24,18 +25,19 @@ type WorkspaceProfile = {
   is_active: boolean;
 };
 type WorkspaceBranch = { id: string; code: string; name: string; is_active: boolean };
+type WorkspaceDevice = { id: string; branch_id: string; device_code: string; device_name: string };
 
 async function getWorkspaceContext() {
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { profile: null as WorkspaceProfile | null, organizationName: null as string | null, branches: [] as WorkspaceBranch[], error: "Sesi tidak dapat diverifikasi. Silakan login kembali." };
+      return { profile: null as WorkspaceProfile | null, organizationName: null as string | null, branches: [] as WorkspaceBranch[], devices: [] as WorkspaceDevice[], error: "Sesi tidak dapat diverifikasi. Silakan login kembali." };
     }
     const { data, error: profileError } = await supabase.from("users")
       .select("id, organization_id, full_name, email, role, is_active").eq("id", user.id).maybeSingle();
     if (profileError) {
-      return { profile: null, organizationName: null, branches: [], error: "Profil belum dapat dibaca. Periksa policy RLS dan konfigurasi Supabase." };
+      return { profile: null, organizationName: null, branches: [], devices: [], error: "Profil belum dapat dibaca. Periksa policy RLS dan konfigurasi Supabase." };
     }
     if (!data) {
       return { profile: null, organizationName: null, branches: [], error: "Akun login belum terhubung ke profil POS. Admin perlu membuat baris users dengan ID yang sama dengan Supabase Auth." };
@@ -44,14 +46,15 @@ async function getWorkspaceContext() {
     if (!profile.is_active) {
       return { profile, organizationName: null, branches: [], error: "Profil POS ini dinonaktifkan. Hubungi administrator." };
     }
-    const [{ data: org }, { data: branchData, error: branchError }] = await Promise.all([
+    const [{ data: org }, { data: branchData, error: branchError }, { data: deviceData, error: deviceError }] = await Promise.all([
       supabase.from("organizations").select("name").eq("id", profile.organization_id).maybeSingle(),
       supabase.from("branches").select("id, code, name, is_active").eq("organization_id", profile.organization_id).eq("is_active", true).order("name"),
+      supabase.from("devices").select("id, branch_id, device_code, device_name").eq("organization_id", profile.organization_id).eq("is_active", true).order("device_name"),
     ]);
     if (branchError) {
       return { profile, organizationName: org?.name ?? null, branches: [], error: "Profil terverifikasi, tetapi cabang tidak dapat dimuat. Periksa policy RLS." };
     }
-    return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], error: null };
+    return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], devices: (deviceData ?? []) as WorkspaceDevice[], error: null };
   } catch {
     return { profile: null, organizationName: null, branches: [], error: "Supabase belum siap atau konfigurasi server belum lengkap." };
   }
