@@ -51,8 +51,8 @@ async function getWorkspaceContext() {
       supabase.from("branches").select("id, code, name, is_active").eq("organization_id", profile.organization_id).eq("is_active", true).order("name"),
       supabase.from("devices").select("id, branch_id, device_code, device_name").eq("organization_id", profile.organization_id).eq("is_active", true).order("device_name"),
     ]);
-    if (branchError) {
-      return { profile, organizationName: org?.name ?? null, branches: [], error: "Profil terverifikasi, tetapi cabang tidak dapat dimuat. Periksa policy RLS." };
+    if (branchError || deviceError) {
+      return { profile, organizationName: org?.name ?? null, branches: [], devices: [], error: "Profil terverifikasi, tetapi cabang atau perangkat tidak dapat dimuat. Periksa policy RLS." };
     }
     return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], devices: (deviceData ?? []) as WorkspaceDevice[], error: null };
   } catch {
