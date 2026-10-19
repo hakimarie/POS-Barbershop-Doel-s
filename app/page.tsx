@@ -32,29 +32,30 @@ async function getWorkspaceContext() {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { profile: null as WorkspaceProfile | null, organizationName: null as string | null, branches: [] as WorkspaceBranch[], devices: [] as WorkspaceDevice[], error: "Sesi tidak dapat diverifikasi. Silakan login kembali." };
+      return { profile: null as WorkspaceProfile | null, organizationName: null as string | null, branches: [] as WorkspaceBranch[], devices: [] as WorkspaceDevice[], activeShifts: [] as { id: string; device_id: string; status: string; opened_at: string; opening_cash_amount: number }[], error: "Sesi tidak dapat diverifikasi. Silakan login kembali." };
     }
     const { data, error: profileError } = await supabase.from("users")
       .select("id, organization_id, full_name, email, role, is_active").eq("id", user.id).maybeSingle();
     if (profileError) {
-      return { profile: null, organizationName: null, branches: [], devices: [], error: "Profil belum dapat dibaca. Periksa policy RLS dan konfigurasi Supabase." };
+      return { profile: null, organizationName: null, branches: [], devices: [], activeShifts: [], error: "Profil belum dapat dibaca. Periksa policy RLS dan konfigurasi Supabase." };
     }
     if (!data) {
       return { profile: null, organizationName: null, branches: [], devices: [], error: "Akun login belum terhubung ke profil POS. Admin perlu membuat baris users dengan ID yang sama dengan Supabase Auth." };
     }
     const profile = data as WorkspaceProfile;
     if (!profile.is_active) {
-      return { profile, organizationName: null, branches: [], devices: [], error: "Profil POS ini dinonaktifkan. Hubungi administrator." };
+      return { profile, organizationName: null, branches: [], devices: [], activeShifts: [], error: "Profil POS ini dinonaktifkan. Hubungi administrator." };
     }
-    const [{ data: org }, { data: branchData, error: branchError }, { data: deviceData, error: deviceError }] = await Promise.all([
+    const [{ data: org }, { data: branchData, error: branchError }, { data: deviceData, error: deviceError }, { data: shiftData, error: shiftError }] = await Promise.all([
       supabase.from("organizations").select("name").eq("id", profile.organization_id).maybeSingle(),
       supabase.from("branches").select("id, code, name, is_active").eq("organization_id", profile.organization_id).eq("is_active", true).order("name"),
       supabase.from("devices").select("id, branch_id, device_code, device_name").eq("organization_id", profile.organization_id).eq("is_active", true).order("device_name"),
+      supabase.from("cash_shifts").select("id, device_id, status, opened_at, opening_cash_amount").eq("organization_id", profile.organization_id).in("status", ["open", "review_required"]).order("opened_at", { ascending: false }),
     ]);
-    if (branchError || deviceError) {
-      return { profile, organizationName: org?.name ?? null, branches: [], devices: [], error: "Profil terverifikasi, tetapi cabang atau perangkat tidak dapat dimuat. Periksa policy RLS." };
+    if (branchError || deviceError || shiftError) {
+      return { profile, organizationName: org?.name ?? null, branches: [], devices: [], activeShifts: [], error: "Profil terverifikasi, tetapi cabang atau perangkat tidak dapat dimuat. Periksa policy RLS." };
     }
-    return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], devices: (deviceData ?? []) as WorkspaceDevice[], error: null };
+    return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], devices: (deviceData ?? []) as WorkspaceDevice[], activeShifts: shiftData ?? [], error: null };
   } catch {
     return { profile: null, organizationName: null, branches: [], devices: [], error: "Supabase belum siap atau konfigurasi server belum lengkap." };
   }
@@ -116,7 +117,7 @@ export default async function HomePage() {
                   {workspace.branches.map((branch) => (
                     <article className="action-card" key={branch.id}>
                       <span className="action-number">{branch.code}</span><h3>{branch.name}</h3>
-                      <p>Cabang aktif · akses ditentukan oleh RLS</p><span className="coming-soon">Shift kasir belum diaktifkan</span>
+                      <p>Cabang aktif · akses ditentukan oleh RLS</p><span className="coming-soon">{workspace.activeShifts.some((shift) => workspace.devices.some((device) => device.id === shift.device_id && device.branch_id === branch.id && shift.status === "open")) ? "Ada shift aktif" : "Tidak ada shift aktif"}</span>
                     </article>
                   ))}
                 </div>
@@ -124,7 +125,7 @@ export default async function HomePage() {
             </section>
           )}
           {!workspace.error ? (
-            <OpenCashShiftForm branches={workspace.branches} devices={workspace.devices} />
+            <OpenCashShiftForm branches={workspace.branches} devices={workspace.devices} activeShifts={workspace.activeShifts} />
           ) : null}
           <div className="notice">
             <div className="notice-icon">i</div>
