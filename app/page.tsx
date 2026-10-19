@@ -1,3 +1,5 @@
+import SignOutButton from "@/components/auth/sign-out-button";
+
 const stats = [
   { label: "Penjualan hari ini", value: "Rp 0", note: "Belum ada transaksi tersinkron" },
   { label: "Transaksi", value: "0", note: "Semua metode pembayaran" },
@@ -33,14 +35,14 @@ export default function HomePage() {
         </nav>
         <div className="sidebar-bottom">
           <span className="status-dot" />
-          <div><strong>Mode demo</strong><small>Belum terhubung ke database</small></div>
+          <div><strong>Sesi terautentikasi</strong><small>Data operasional masih mode demo</small></div>
         </div>
       </aside>
 
       <section className="main-panel" id="dashboard">
         <header className="topbar">
           <div className="breadcrumbs">Workspace <span>/</span> <strong>Dashboard</strong></div>
-          <div className="topbar-right"><span className="offline-pill"><i /> Offline-ready · fondasi</span><div className="avatar">DO</div></div>
+          <div className="topbar-right"><span className="offline-pill"><i /> Offline-ready · fondasi</span><div className="avatar" aria-label="Doel’s Barbershop">DO</div><SignOutButton /></div>
         </header>
         <div className="content">
           <div className="welcome-row">
