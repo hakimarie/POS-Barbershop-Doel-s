@@ -16,3 +16,35 @@
 .shift-message.success{color:#166534;background:#f0fdf4;border:1px solid #bbf7d0}
 .shift-message.error{color:#9a3412;background:#fff7ed;border:1px solid #fed7aa}
 @media(max-width:700px){.shift-form{grid-template-columns:1fr;padding:14px}.shift-form button,.shift-form .shift-message{grid-column:auto}}
+
+
+/* Service catalogue and branch-specific pricing */
+.secondary-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid #dce3ef;background:#fff;color:#42516a;border-radius:8px;padding:11px 14px;font-size:11px;font-weight:650;white-space:nowrap}
+.text-link{color:var(--blue);font-size:12px;font-weight:650}
+.service-form{display:grid;gap:10px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:20px;margin-bottom:24px}
+.service-form-intro h3{font-size:13px;margin:0 0 6px}
+.service-form-intro p{font-size:10px;line-height:1.6;color:var(--muted);margin:0 0 6px}
+.service-form label{display:block;font-size:10px;font-weight:700;color:#4d586c;margin:3px 0 6px}
+.service-form input,.service-form select{width:100%;min-width:0;border:1px solid #dce1ea;border-radius:8px;padding:11px 12px;font:inherit;font-size:12px;color:var(--ink);background:#fff;outline:none}
+.service-form input:focus,.service-form select:focus{border-color:#6090f5;box-shadow:0 0 0 3px #2563eb18}
+.service-form-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.service-price-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+.service-form .primary-button{opacity:1;cursor:pointer;justify-self:start}
+.service-form .primary-button:disabled{opacity:.5;cursor:not-allowed}
+.service-form .shift-message{margin:0}
+.service-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:11px;background:#fff}
+.service-table{width:100%;border-collapse:collapse;font-size:11px;min-width:680px}
+.service-table th{background:#f9fafc;color:#778197;text-align:left;font-size:9px;letter-spacing:.4px;font-weight:750;padding:13px 15px;border-bottom:1px solid var(--line)}
+.service-table td{padding:15px;border-bottom:1px solid #eef0f5;vertical-align:top}
+.service-table tbody tr:last-child td{border-bottom:0}
+.service-table td strong{font-size:11px}
+.service-code{display:inline-block;border-radius:6px;padding:5px 7px;background:#edf3ff;color:#315fc0;font-size:10px;font-weight:750}
+.branch-price-list{display:grid;gap:6px;min-width:150px}
+.branch-price-list div{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.branch-price-list span{color:#778197;font-size:10px}
+.branch-price-list strong{font-size:10px;white-space:nowrap}
+.muted-text{font-size:10px;color:#9aa2b1}
+.status-tag{display:inline-flex;border-radius:20px;padding:5px 8px;font-size:9px;font-weight:700}
+.active-tag{background:#ecfdf3;color:#167647}
+.inactive-tag{background:#f3f4f6;color:#6b7280}
+@media(max-width:700px){.service-form{padding:14px}.service-form-fields,.service-price-fields{grid-template-columns:1fr;gap:8px}.secondary-button{width:100%}}
