@@ -16,6 +16,7 @@ export default function LoginPage() {
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const authError = searchParams.get("error");
+  const callbackFailed = authError === "auth";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,7 +63,7 @@ export default function LoginPage() {
           </div>
         ) : null}
 
-        {message ? <div className="auth-alert" role="alert">{message}</div> : null}
+        {callbackFailed ? <div className="auth-alert" role="alert">Sesi autentikasi tidak berhasil diverifikasi. Silakan masuk kembali.</div> : null}\n        {message ? <div className="auth-alert" role="alert">{message}</div> : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label htmlFor="email">Email</label>
