@@ -1,4 +1,5 @@
 import SignOutButton from "@/components/auth/sign-out-button";
+import { createClient } from "@/lib/supabase/server";
 
 const stats = [
   { label: "Penjualan hari ini", value: "Rp 0", note: "Belum ada transaksi tersinkron" },
@@ -14,7 +15,50 @@ const quickActions = [
   { number: "04", title: "Kelola layanan", description: "Atur harga layanan untuk tiap cabang." },
 ];
 
-export default function HomePage() {
+type WorkspaceProfile = {
+  id: string;
+  organization_id: string;
+  full_name: string;
+  email: string;
+  role: "owner" | "admin" | "manager" | "cashier" | "barber";
+  is_active: boolean;
+};
+type WorkspaceBranch = { id: string; code: string; name: string; is_active: boolean };
+
+async function getWorkspaceContext() {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { profile: null as WorkspaceProfile | null, organizationName: null as string | null, branches: [] as WorkspaceBranch[], error: "Sesi tidak dapat diverifikasi. Silakan login kembali." };
+    }
+    const { data, error: profileError } = await supabase.from("users")
+      .select("id, organization_id, full_name, email, role, is_active").eq("id", user.id).maybeSingle();
+    if (profileError) {
+      return { profile: null, organizationName: null, branches: [], error: "Profil belum dapat dibaca. Periksa policy RLS dan konfigurasi Supabase." };
+    }
+    if (!data) {
+      return { profile: null, organizationName: null, branches: [], error: "Akun login belum terhubung ke profil POS. Admin perlu membuat baris users dengan ID yang sama dengan Supabase Auth." };
+    }
+    const profile = data as WorkspaceProfile;
+    if (!profile.is_active) {
+      return { profile, organizationName: null, branches: [], error: "Profil POS ini dinonaktifkan. Hubungi administrator." };
+    }
+    const [{ data: org }, { data: branchData, error: branchError }] = await Promise.all([
+      supabase.from("organizations").select("name").eq("id", profile.organization_id).maybeSingle(),
+      supabase.from("branches").select("id, code, name, is_active").eq("organization_id", profile.organization_id).eq("is_active", true).order("name"),
+    ]);
+    if (branchError) {
+      return { profile, organizationName: org?.name ?? null, branches: [], error: "Profil terverifikasi, tetapi cabang tidak dapat dimuat. Periksa policy RLS." };
+    }
+    return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], error: null };
+  } catch {
+    return { profile: null, organizationName: null, branches: [], error: "Supabase belum siap atau konfigurasi server belum lengkap." };
+  }
+}
+
+export default async function HomePage() {
+  const workspace = await getWorkspaceContext();
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -35,7 +79,7 @@ export default function HomePage() {
         </nav>
         <div className="sidebar-bottom">
           <span className="status-dot" />
-          <div><strong>Sesi terautentikasi</strong><small>Data operasional masih mode demo</small></div>
+          <div><strong>{workspace.profile?.full_name ?? "Sesi terautentikasi"}</strong><small>{workspace.profile ? workspace.profile.role : "Profil POS belum terhubung"}</small></div>
         </div>
       </aside>
 
@@ -54,6 +98,28 @@ export default function HomePage() {
             <button className="primary-button" type="button" disabled title="Akan aktif setelah alur transaksi dibangun">＋ Transaksi baru</button>
           </div>
 
+          {workspace.error ? (
+            <div className="notice" role="status">
+              <div className="notice-icon">!</div>
+              <div><strong>Perlu tindakan administrator</strong><p>{workspace.error}</p></div>
+            </div>
+          ) : (
+            <section className="section-block">
+              <div className="section-heading"><div><h2>Cabang yang dapat diakses</h2><p>Daftar ini berasal dari profil login dan policy RLS Supabase.</p></div><span className="section-count">{workspace.branches.length} CABANG</span></div>
+              {workspace.branches.length === 0 ? (
+                <div className="notice"><div className="notice-icon">i</div><div><strong>Belum ada cabang aktif</strong><p>Tambahkan cabang dan membership pengguna melalui proses administrasi yang tervalidasi.</p></div></div>
+              ) : (
+                <div className="actions-grid">
+                  {workspace.branches.map((branch) => (
+                    <article className="action-card" key={branch.id}>
+                      <span className="action-number">{branch.code}</span><h3>{branch.name}</h3>
+                      <p>Cabang aktif · akses ditentukan oleh RLS</p><span className="coming-soon">Shift kasir belum diaktifkan</span>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
           <div className="notice">
             <div className="notice-icon">i</div>
             <div><strong>Fondasi aplikasi sudah disiapkan</strong><p>Angka di bawah adalah placeholder. Data penjualan nyata baru ditampilkan setelah Supabase dikonfigurasi dan alur transaksi diuji.</p></div>
