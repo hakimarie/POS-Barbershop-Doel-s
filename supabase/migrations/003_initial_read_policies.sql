@@ -89,11 +89,11 @@ AS $$
   )
 $$;
 
-REVOKE ALL ON FUNCTION public.kt_current_org_id() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.kt_current_role() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.kt_is_org_admin() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.kt_can_access_branch(uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.kt_can_operate_branch(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.kt_current_org_id() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.kt_current_role() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.kt_is_org_admin() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.kt_can_access_branch(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.kt_can_operate_branch(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.kt_current_org_id() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.kt_current_role() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.kt_is_org_admin() TO authenticated;
