@@ -54,7 +54,11 @@ export async function checkoutSale(formData: FormData): Promise<CheckoutResult> 
       if (error.code === "42501") return { ok: false, message: "Akses ditolak. Periksa peran pengguna dan akses cabang." };
       if (error.code === "23514" || error.code === "23503") return { ok: false, message: error.message || "Shift, harga, barber, atau cabang tidak memenuhi syarat transaksi." };
       if (error.code === "23505") return { ok: false, message: "ID transaksi sudah dipakai untuk data yang berbeda. Muat ulang kasir untuk membuat ID baru." };
-      return { ok: false, message: "Checkout gagal. Pastikan migration 008 dan 009 sudah diterapkan di Supabase staging." };
+      if (error.code === "PGRST202" || error.code === "42883") {
+        return { ok: false, message: "Fungsi checkout versi terbaru tidak ditemukan. Terapkan migration 008 lalu 009 di Supabase staging, kemudian refresh schema cache jika diperlukan." };
+      }
+      const diagnostic = [error.code, error.message].filter(Boolean).join(" — ").slice(0, 260);
+      return { ok: false, message: `Checkout gagal di database: ${diagnostic || "error tidak diketahui"}. Jangan ulangi transaksi sebelum memastikan tidak ada transaksi yang tercatat.` };
     }
 
     const row = Array.isArray(data) ? data[0] : data;
