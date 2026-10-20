@@ -95,6 +95,17 @@ BEGIN
     RAISE EXCEPTION 'Paid QRIS state was not persisted consistently';
   END IF;
 
+  v_locked := false;
+  BEGIN
+    UPDATE public.sale_items SET quantity=2
+    WHERE sale_id=v_sale_paid;
+  EXCEPTION WHEN check_violation THEN
+    v_locked := true;
+  END;
+  IF NOT v_locked THEN
+    RAISE EXCEPTION 'Sale items must remain immutable after payment is finalized';
+  END IF;
+
   v_result := public.kt_apply_verified_qris_event(
     'test-provider','qris-expired-event-001','payment.expired',v_payment_expired,
     'qris-reference-expired-001','expired','{"test":true}'::jsonb
