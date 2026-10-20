@@ -33,7 +33,7 @@ export default async function BranchesPage() {
     <section className="main-panel">
       <header className="topbar"><div className="breadcrumbs"><Link href="/">Workspace</Link><span>/</span><strong>Cabang</strong></div><div className="topbar-right"><span className="offline-pill"><i /> Master data</span><div className="avatar">DO</div><SignOutButton /></div></header>
       <div className="content">
-        <div className="welcome-row"><div><p className="eyebrow">DOEL'S BARBERSHOP · MASTER DATA</p><h1>Pengaturan cabang</h1><p className="subtitle">Tetapkan nama outlet tanpa mengganti kode internal cabang.</p></div><Link className="secondary-button" href="/">← Kembali ke dashboard</Link></div>
+        <div className="welcome-row"><div><p className="eyebrow">DOEL&apos;S BARBERSHOP · MASTER DATA</p><h1>Pengaturan cabang</h1><p className="subtitle">Tetapkan nama outlet tanpa mengganti kode internal cabang.</p></div><Link className="secondary-button" href="/">← Kembali ke dashboard</Link></div>
         {error ? <div className="notice"><div className="notice-icon">!</div><div><strong>Data cabang belum dapat dimuat</strong><p>Periksa koneksi Supabase dan policy RLS.</p></div></div> : null}
         {!error && canManage ? <BranchNameForm branches={branches.filter((branch) => branch.is_active)} /> : null}
         {!canManage ? <div className="notice"><div className="notice-icon">i</div><div><strong>Mode lihat saja</strong><p>Hanya owner/admin yang dapat mengganti nama cabang.</p></div></div> : null}
