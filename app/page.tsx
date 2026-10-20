@@ -167,13 +167,7 @@ export default async function HomePage() {
                 <li><span className="check pending">4</span><div><strong>Offline sync & QRIS</strong><small>Antrean lokal dan konfirmasi pembayaran</small></div><span className="tag pending-tag">Belum</span></li>
               </ul>
             </article>
-            <article className="panel-card architecture-card">
-              <span className="mini-label">TECH STACK</span><h2>Fondasi sistem</h2>
-              <div className="stack-item"><span className="stack-icon next-icon">N</span><div><strong>Next.js + TypeScript</strong><small>Web POS / PWA</small></div></div>
-              <div className="stack-item"><span className="stack-icon supa-icon">S</span><div><strong>Supabase</strong><small>PostgreSQL + Auth + RLS</small></div></div>
-              <div className="stack-item"><span className="stack-icon local-icon">↻</span><div><strong>IndexedDB + sync queue</strong><small>Transaksi saat koneksi terputus</small></div></div>
-              <p className="architecture-footnote">Keamanan transaksi, aturan komisi, dan sinkronisasi perlu diuji sebelum digunakan di cabang.</p>
-            </article>
+
           </section>
           <footer className="footer">KetemuTerus Barber POS <span>•</span> Internal foundation build <span>•</span> v0.1.0</footer>
         </div>
