@@ -61,10 +61,10 @@ export default async function HomePage() {
   return (
     <main className="app-shell">
       <aside className="sidebar">
-        <a className="brand" href="/" aria-label="KetemuTerus Barber POS beranda">
+        <Link className="brand" href="/" aria-label="KetemuTerus Barber POS beranda">
           <span className="brand-mark">KT</span>
           <span className="brand-copy"><strong>KetemuTerus</strong><small>BARBER POS</small></span>
-        </a>
+        </Link>
         <div className="sidebar-label">WORKSPACE</div>
         <nav className="nav-list" aria-label="Navigasi utama">
           <a className="nav-item active" href="#dashboard"><span>▦</span> Dashboard</a>
