@@ -5,15 +5,11 @@ import { useMemo, useState } from "react";
 export type SalesDay = { date: string; revenue: number; transactions: number };
 type Props = {
   days: SalesDay[];
-  totalRevenue: number;
-  paidTransactions: number;
-  averageTicket: number;
   pendingPayments: number;
   dataError?: string | null;
 };
 
 const idr = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
-const compactIdr = new Intl.NumberFormat("id-ID", { notation: "compact", maximumFractionDigits: 1 });
 
 function shortDate(date: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(date + "T12:00:00Z"));
