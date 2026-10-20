@@ -53,7 +53,7 @@ function LoginContent() {
         <Link className="brand auth-brand" href="/" aria-label="KetemuTerus Barber POS">
           <span className="brand-mark">KT</span>
           <span className="brand-copy"><strong>KetemuTerus</strong><small>BARBER POS</small></span>
-        </a>
+        </Link>
         <p className="eyebrow">DOEL&apos;S BARBERSHOP · MULTI-CABANG</p>
         <h1 id="login-title">Masuk ke workspace</h1>
         <p className="auth-description">Gunakan akun operasional yang telah didaftarkan oleh administrator.</p>
