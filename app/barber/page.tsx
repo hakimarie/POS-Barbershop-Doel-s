@@ -50,7 +50,7 @@ export default async function BarberPage() {
           <div className="section-heading"><div><h2>Daftar barber</h2><p>Penugasan aktif ditentukan berdasarkan periode efektif.</p></div><span className="section-count">{barbers.filter((b) => b.is_active).length} BARBER AKTIF</span></div>
           {barbers.length === 0 ? <div className="notice"><div className="notice-icon">i</div><div><strong>Belum ada data barber</strong><p>Tambahkan barber menggunakan formulir di atas.</p></div></div> : <div className="service-table-wrap"><table className="service-table"><thead><tr><th>Kode</th><th>Nama barber</th><th>Status</th><th>Cabang aktif</th></tr></thead><tbody>{barbers.map((barber) => {
             const activeAssignments = assignments.filter((a) => a.barber_id === barber.id);
-            const branchNames = activeAssignments.map((a) => branchMap.get(a.branch_id)).filter(Boolean).map((b) => b!.code);
+            const branchNames = activeAssignments.map((a) => branchMap.get(a.branch_id)).filter(Boolean).map((b) => b!.name);
             return <tr key={barber.id}><td><span className="service-code">{barber.barber_code}</span></td><td><strong>{barber.full_name}</strong></td><td><span className={barber.is_active ? "status-tag active-tag" : "status-tag inactive-tag"}>{barber.is_active ? "Aktif" : "Nonaktif"}</span></td><td>{branchNames.length ? branchNames.join(", ") : <span className="muted-text">Belum ditugaskan</span>}</td></tr>;
           })}</tbody></table></div>}
         </section>
