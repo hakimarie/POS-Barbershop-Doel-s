@@ -55,7 +55,7 @@ export default async function ServicesPage() {
       <section className="main-panel">
         <header className="topbar"><div className="breadcrumbs"><Link href="/">Workspace</Link><span>/</span><strong>Layanan & harga</strong></div><div className="topbar-right"><span className="offline-pill"><i /> Master data</span><div className="avatar">DO</div><SignOutButton /></div></header>
         <div className="content">
-          <div className="welcome-row"><div><p className="eyebrow">DOEL'S BARBERSHOP · MASTER DATA</p><h1>Layanan & harga cabang</h1><p className="subtitle">Kelola katalog layanan dan harga efektif untuk setiap cabang.</p></div><Link className="secondary-button" href="/">← Kembali ke dashboard</Link></div>
+          <div className="welcome-row"><div><p className="eyebrow">DOEL&apos;S BARBERSHOP · MASTER DATA</p><h1>Layanan & harga cabang</h1><p className="subtitle">Kelola katalog layanan dan harga efektif untuk setiap cabang.</p></div><Link className="secondary-button" href="/">← Kembali ke dashboard</Link></div>
           {!canManage ? <div className="notice"><div className="notice-icon">i</div><div><strong>Mode lihat saja</strong><p>Akun dengan peran {profile.role} dapat melihat katalog, tetapi hanya owner/admin yang dapat mengubah layanan dan harga.</p></div></div> : null}
           {canManage ? <ServicePriceForm branches={branches} services={services.filter((service) => service.is_active)} /> : null}
           <section className="section-block">
