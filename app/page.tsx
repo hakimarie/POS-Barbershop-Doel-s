@@ -1,14 +1,8 @@
 import Link from "next/link";
 import SignOutButton from "@/components/auth/sign-out-button";
 import OpenCashShiftForm from "@/components/shifts/open-cash-shift-form";
+import BranchOverview from "@/components/dashboard/branch-overview";
 import { createClient } from "@/lib/supabase/server";
-
-const stats = [
-  { label: "Penjualan hari ini", value: "Rp 0", note: "Belum ada transaksi tersinkron" },
-  { label: "Transaksi", value: "0", note: "Semua metode pembayaran" },
-  { label: "Komisi barber", value: "Rp 0", note: "Menunggu data transaksi" },
-  { label: "Status sinkronisasi", value: "Siap", note: "Antrean offline belum diaktifkan" },
-];
 
 const quickActions: { number: string; title: string; description: string; href?: string }[] = [
   { number: "01", title: "Kasir baru", description: "Pilih cabang, barber, dan layanan.", href: "/kasir" },
@@ -109,38 +103,28 @@ export default async function HomePage() {
               <div><strong>Perlu tindakan administrator</strong><p>{workspace.error}</p></div>
             </div>
           ) : (
-            <section className="section-block">
-              <div className="section-heading"><div><h2>Cabang yang dapat diakses</h2><p>Daftar ini berasal dari profil login dan policy RLS Supabase.</p></div><span className="section-count">{workspace.branches.length} CABANG</span></div>
-              {workspace.branches.length === 0 ? (
-                <div className="notice"><div className="notice-icon">i</div><div><strong>Belum ada cabang aktif</strong><p>Tambahkan cabang dan membership pengguna melalui proses administrasi yang tervalidasi.</p></div></div>
-              ) : (
-                <div className="actions-grid">
-                  {workspace.branches.map((branch) => (
-                    <article className="action-card" key={branch.id}>
-                      <span className="action-number">{branch.code}</span><h3>{branch.name}</h3>
-                      <p>Cabang aktif · akses ditentukan oleh RLS</p><span className="coming-soon">{workspace.activeShifts.some((shift) => workspace.devices.some((device) => device.id === shift.device_id && device.branch_id === branch.id && shift.status === "open")) ? "Ada shift aktif" : "Tidak ada shift aktif"}</span>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
+            <BranchOverview branches={workspace.branches} devices={workspace.devices} activeShifts={workspace.activeShifts} />
           )}
           {!workspace.error ? (
             <OpenCashShiftForm branches={workspace.branches} devices={workspace.devices} activeShifts={workspace.activeShifts} />
           ) : null}
-          <div className="notice">
-            <div className="notice-icon">i</div>
-            <div><strong>Fondasi aplikasi sudah disiapkan</strong><p>Angka di bawah adalah placeholder. Data penjualan nyata baru ditampilkan setelah Supabase dikonfigurasi dan alur transaksi diuji.</p></div>
-          </div>
-
-          <section className="stats-grid" aria-label="Ringkasan metrik">
-            {stats.map((stat) => (
-              <article className="stat-card" key={stat.label}>
-                <span className="stat-label">{stat.label}</span>
-                <strong className="stat-value">{stat.value}</strong>
-                <span className="stat-note">{stat.note}</span>
-              </article>
-            ))}
+          <section className="ops-summary" aria-label="Ringkasan operasional">
+            <article className="ops-summary-card">
+              <span className="ops-summary-icon blue">⌖</span>
+              <div><span className="ops-summary-label">Cabang dapat diakses</span><strong>{workspace.branches.length}</strong><small>Dari data organisasi aktif</small></div>
+            </article>
+            <article className="ops-summary-card">
+              <span className="ops-summary-icon violet">▣</span>
+              <div><span className="ops-summary-label">Perangkat aktif</span><strong>{workspace.devices.length}</strong><small>Terdaftar di workspace</small></div>
+            </article>
+            <article className="ops-summary-card">
+              <span className="ops-summary-icon green">◷</span>
+              <div><span className="ops-summary-label">Shift terbuka</span><strong>{workspace.activeShifts.filter((shift) => shift.status === "open").length}</strong><small>Termasuk perangkat yang terhubung</small></div>
+            </article>
+            <article className="ops-summary-card">
+              <span className="ops-summary-icon amber">!</span>
+              <div><span className="ops-summary-label">Perlu ditinjau</span><strong>{workspace.activeShifts.filter((shift) => shift.status === "review_required").length}</strong><small>Shift dengan status review</small></div>
+            </article>
           </section>
 
           <section className="section-block">
