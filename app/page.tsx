@@ -2,6 +2,7 @@ import Link from "next/link";
 import SignOutButton from "@/components/auth/sign-out-button";
 import OpenCashShiftForm from "@/components/shifts/open-cash-shift-form";
 import BranchOverview from "@/components/dashboard/branch-overview";
+import SalesPerformance, { type SalesDay } from "@/components/dashboard/sales-performance";
 import { createClient } from "@/lib/supabase/server";
 
 const quickActions: { number: string; title: string; description: string; href?: string }[] = [
@@ -56,8 +57,55 @@ async function getWorkspaceContext() {
   }
 }
 
+async function getSalesOverview(organizationId: string): Promise<{ days: SalesDay[]; pendingPayments: number; error: string | null }> {
+  const now = new Date();
+  const start = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
+  const dayKey = (date: Date) => new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(date);
+  const days: SalesDay[] = Array.from({ length: 30 }, (_, index) => {
+    const date = new Date(start.getTime() + index * 24 * 60 * 60 * 1000);
+    return { date: dayKey(date), revenue: 0, transactions: 0 };
+  });
+  try {
+    const supabase = await createClient();
+    const [{ data: sales, error: salesError }, { count: pendingPayments, error: pendingError }] = await Promise.all([
+      supabase.from("sales")
+        .select("id, status, total_amount, created_at")
+        .eq("organization_id", organizationId)
+        .gte("created_at", start.toISOString())
+        .order("created_at", { ascending: true })
+        .limit(10000),
+      supabase.from("sales")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .eq("status", "pending_payment")
+        .gte("created_at", start.toISOString()),
+    ]);
+    if (salesError || pendingError) {
+      return { days, pendingPayments: 0, error: "Periksa izin baca tabel sales dan policy RLS. Angka tidak ditampilkan bila query gagal." };
+    }
+    const indexByDate = new Map(days.map((day, index) => [day.date, index]));
+    for (const sale of sales ?? []) {
+      const date = dayKey(new Date(sale.created_at));
+      const index = indexByDate.get(date);
+      if (index === undefined) continue;
+      if (sale.status === "paid") {
+        days[index].revenue += Number(sale.total_amount ?? 0);
+        days[index].transactions += 1;
+      }
+    }
+    return { days, pendingPayments: pendingPayments ?? 0, error: null };
+  } catch {
+    return { days, pendingPayments: 0, error: "Koneksi atau konfigurasi Supabase belum tersedia untuk laporan penjualan." };
+  }
+}
+
 export default async function HomePage() {
   const workspace = await getWorkspaceContext();
+  const salesOverview = workspace.profile && !workspace.error
+    ? await getSalesOverview(workspace.profile.organization_id)
+    : null;
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -108,6 +156,10 @@ export default async function HomePage() {
           {!workspace.error ? (
             <OpenCashShiftForm branches={workspace.branches} devices={workspace.devices} activeShifts={workspace.activeShifts} />
           ) : null}
+          {salesOverview ? (
+            <SalesPerformance days={salesOverview.days} pendingPayments={salesOverview.pendingPayments} dataError={salesOverview.error} />
+          ) : null}
+
           <section className="ops-summary" aria-label="Ringkasan operasional">
             <article className="ops-summary-card">
               <span className="ops-summary-icon blue">⌖</span>
