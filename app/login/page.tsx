@@ -1,3 +1,4 @@
+import Link from "next/link";
 "use client";
 
 import { FormEvent, Suspense, useState } from "react";
@@ -49,7 +50,7 @@ function LoginContent() {
   return (
     <main className="auth-shell">
       <section className="auth-card" aria-labelledby="login-title">
-        <a className="brand auth-brand" href="/" aria-label="KetemuTerus Barber POS">
+        <Link className="brand auth-brand" href="/" aria-label="KetemuTerus Barber POS">
           <span className="brand-mark">KT</span>
           <span className="brand-copy"><strong>KetemuTerus</strong><small>BARBER POS</small></span>
         </a>
