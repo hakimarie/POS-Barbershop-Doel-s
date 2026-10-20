@@ -67,7 +67,7 @@ export default async function CashierPage() {
     <section className="main-panel">
       <header className="topbar"><div className="breadcrumbs"><Link href="/">Workspace</Link><span>/</span><strong>Kasir</strong></div><div className="topbar-right"><span className="offline-pill"><i /> Checkout staging</span><div className="avatar">DO</div><SignOutButton /></div></header>
       <div className="content">
-        <div className="welcome-row"><div><p className="eyebrow">DOEL'S BARBERSHOP · POINT OF SALE</p><h1>Kasir baru</h1><p className="subtitle">Buat transaksi untuk layanan barber dengan harga efektif per cabang.</p></div><Link className="secondary-button" href="/">← Dashboard</Link></div>
+        <div className="welcome-row"><div><p className="eyebrow">DOEL&apos;S BARBERSHOP · POINT OF SALE</p><h1>Kasir baru</h1><p className="subtitle">Buat transaksi untuk layanan barber dengan harga efektif per cabang.</p></div><Link className="secondary-button" href="/">← Dashboard</Link></div>
         <div className="notice"><div className="notice-icon">i</div><div><strong>Uji di staging terlebih dahulu</strong><p>Transaksi tunai dicatat lunas. QRIS hanya berstatus menunggu konfirmasi. Komisi tanpa konfigurasi aktif ditandai perlu review dan tidak dihitung sebagai komisi final.</p></div></div>
         {operationalDataComplete ? <CheckoutForm branches={branches} devices={devices} shifts={shifts} services={services} prices={prices} barbers={barbers} assignments={assignments} /> :
           <div className="notice"><div className="notice-icon">!</div><div><strong>Data operasional belum lengkap</strong><p>Berikut pemeriksaan data yang dibutuhkan halaman kasir. Angka menunjukkan jumlah data aktif/efektif yang berhasil dibaca untuk organisasi ini.</p>
