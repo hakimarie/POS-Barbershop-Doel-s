@@ -32,8 +32,14 @@ BEGIN
   PERFORM pg_advisory_xact_lock(hashtextextended(v_org::text || ':' || p_client_transaction_id::text,0));
   SELECT * INTO v_existing FROM public.sales WHERE organization_id=v_org AND client_transaction_id=p_client_transaction_id;
   IF FOUND THEN
-    SELECT * INTO v_existing_item FROM public.sale_items WHERE organization_id=v_org AND sale_id=v_existing.id LIMIT 1;
-    SELECT * INTO v_existing_payment FROM public.payments WHERE organization_id=v_org AND sale_id=v_existing.id LIMIT 1;
+    SELECT si.* INTO v_existing_item
+    FROM public.sale_items AS si
+    WHERE si.organization_id = v_org AND si.sale_id = v_existing.id
+    LIMIT 1;
+    SELECT pay.* INTO v_existing_payment
+    FROM public.payments AS pay
+    WHERE pay.organization_id = v_org AND pay.sale_id = v_existing.id
+    LIMIT 1;
     IF v_existing.branch_id IS DISTINCT FROM p_branch_id OR v_existing.shift_id IS DISTINCT FROM p_shift_id
       OR v_existing.device_id IS DISTINCT FROM p_device_id OR v_existing_item.service_id IS DISTINCT FROM p_service_id
       OR v_existing_item.barber_id IS DISTINCT FROM p_barber_id OR v_existing_item.quantity IS DISTINCT FROM p_quantity
