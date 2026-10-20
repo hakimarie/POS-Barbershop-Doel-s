@@ -61,6 +61,67 @@ CREATE TRIGGER trg_guard_payment_status_transition
 BEFORE UPDATE OF status ON public.payments
 FOR EACH ROW EXECUTE FUNCTION private.kt_guard_payment_status_transition();
 
+-- Extend the original snapshot guard to reject inserts into finalized sales too.
+CREATE OR REPLACE FUNCTION private.kt_guard_finalized_sale_item_snapshot()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $
+DECLARE
+  v_sale_id uuid;
+  v_org_id uuid;
+  v_sale_status text;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    v_sale_id := OLD.sale_id;
+    v_org_id := OLD.organization_id;
+  ELSE
+    v_sale_id := NEW.sale_id;
+    v_org_id := NEW.organization_id;
+  END IF;
+
+  SELECT s.status INTO v_sale_status
+  FROM public.sales AS s
+  WHERE s.id = v_sale_id AND s.organization_id = v_org_id
+  FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Sale item parent sale was not found' USING ERRCODE = '23503';
+  END IF;
+
+  IF v_sale_status IN ('paid', 'partially_refunded', 'refunded', 'cancelled', 'review_required') THEN
+    RAISE EXCEPTION 'Cannot add or change sale items on a finalized sale'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF TG_OP = 'UPDATE' AND (
+       NEW.sale_id IS DISTINCT FROM OLD.sale_id
+       OR NEW.organization_id IS DISTINCT FROM OLD.organization_id
+     ) THEN
+    RAISE EXCEPTION 'Sale item cannot be moved between sales or organizations'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF TG_OP IN ('UPDATE', 'DELETE') AND EXISTS (
+    SELECT 1 FROM public.commission_entries AS ce
+    WHERE ce.organization_id = OLD.organization_id AND ce.sale_item_id = OLD.id
+  ) THEN
+    RAISE EXCEPTION 'Sale item with a commission entry is immutable'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END;
+$;
+
+REVOKE ALL ON FUNCTION private.kt_guard_finalized_sale_item_snapshot() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS trg_guard_finalized_sale_item_snapshot ON public.sale_items;
+CREATE TRIGGER trg_guard_finalized_sale_item_snapshot
+BEFORE INSERT OR UPDATE OR DELETE ON public.sale_items
+FOR EACH ROW EXECUTE FUNCTION private.kt_guard_finalized_sale_item_snapshot();
+
 -- Serialize item writes against the parent sale and freeze items while its QRIS payment is pending.
 -- Checkout inserts the sale item before inserting the payment, so the initial checkout remains valid.
 CREATE OR REPLACE FUNCTION private.kt_guard_qris_pending_sale_item()
