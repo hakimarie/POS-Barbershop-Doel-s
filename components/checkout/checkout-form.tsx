@@ -14,7 +14,7 @@ type OfflineDraft = { transactionId: string; branchId: string; deviceId: string;
 
 export default function CheckoutForm(props: {
   branches: Branch[]; devices: Device[]; shifts: Shift[]; services: Service[];
-  prices: Price[]; barbers: Barber[]; assignments: Assignment[];
+  prices: Price[]; barbers: Barber[]; assignments: Assignment[]; storageKey: string;
 }) {
   const [branchId, setBranchId] = useState(props.branches[0]?.id ?? "");
   const [deviceId, setDeviceId] = useState("");
@@ -24,8 +24,30 @@ export default function CheckoutForm(props: {
   const [quantity, setQuantity] = useState("1");
   const [method, setMethod] = useState("cash");
   const [transactionId, setTransactionId] = useState(() => crypto.randomUUID());
-  const [result, setResult] = useState<CheckoutResult | null>(null);\n  const [offlineDrafts, setOfflineDrafts] = useState<OfflineDraft[]>([]);\n  const [isOnline, setIsOnline] = useState(true);\n  const [offlineNotice, setOfflineNotice] = useState("");
-  const [pending, startTransition] = useTransition();\n\n  useEffect(() => {\n    try { setOfflineDrafts(JSON.parse(window.localStorage.getItem(props.storageKey) ?? "[]") as OfflineDraft[]); }\n    catch { setOfflineDrafts([]); }\n  }, [props.storageKey]);\n\n  useEffect(() => {\n    const updateConnection = () => setIsOnline(window.navigator.onLine);\n    updateConnection();\n    window.addEventListener("online", updateConnection);\n    window.addEventListener("offline", updateConnection);\n    return () => { window.removeEventListener("online", updateConnection); window.removeEventListener("offline", updateConnection); };\n  }, []);\n\n  function saveDrafts(next: OfflineDraft[]) {\n    setOfflineDrafts(next);\n    try { window.localStorage.setItem(props.storageKey, JSON.stringify(next)); }\n    catch { setOfflineNotice("Penyimpanan draft lokal gagal. Jangan tutup halaman; catat transaksi secara manual sesuai SOP."); }\n  }
+  const [result, setResult] = useState<CheckoutResult | null>(null);
+  const [offlineDrafts, setOfflineDrafts] = useState<OfflineDraft[]>([]);
+  const [isOnline, setIsOnline] = useState(true);
+  const [offlineNotice, setOfflineNotice] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    try { setOfflineDrafts(JSON.parse(window.localStorage.getItem(props.storageKey) ?? "[]") as OfflineDraft[]); }
+    catch { setOfflineDrafts([]); }
+  }, [props.storageKey]);
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(window.navigator.onLine);
+    updateConnection();
+    window.addEventListener("online", updateConnection);
+    window.addEventListener("offline", updateConnection);
+    return () => { window.removeEventListener("online", updateConnection); window.removeEventListener("offline", updateConnection); };
+  }, []);
+
+  function saveDrafts(next: OfflineDraft[]) {
+    setOfflineDrafts(next);
+    try { window.localStorage.setItem(props.storageKey, JSON.stringify(next)); }
+    catch { setOfflineNotice("Penyimpanan draft lokal gagal. Jangan tutup halaman; catat transaksi secara manual sesuai SOP."); }
+  }
 
   const devices = props.devices.filter((item) => item.branch_id === branchId);
   const shifts = props.shifts.filter((item) => item.branch_id === branchId && item.status === "open" && (!deviceId || item.device_id === deviceId));
