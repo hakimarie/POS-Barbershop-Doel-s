@@ -15,7 +15,7 @@ function shortDate(date: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(date + "T12:00:00Z"));
 }
 
-export default function SalesPerformance({ days, totalRevenue, paidTransactions, averageTicket, pendingPayments, dataError }: Props) {
+export default function SalesPerformance({ days, pendingPayments, dataError }: Props) {
   const [range, setRange] = useState<7 | 30>(7);
   const visibleDays = useMemo(() => days.slice(-range), [days, range]);
   const maxRevenue = Math.max(1, ...visibleDays.map((day) => day.revenue));
