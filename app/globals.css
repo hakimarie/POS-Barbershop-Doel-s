@@ -48,3 +48,54 @@
 .active-tag{background:#ecfdf3;color:#167647}
 .inactive-tag{background:#f3f4f6;color:#6b7280}
 @media(max-width:700px){.service-form{padding:14px}.service-form-fields,.service-price-fields{grid-template-columns:1fr;gap:8px}.secondary-button{width:100%}}
+
+
+/* Interactive operations dashboard — adapted from the supplied HTML preview */
+.ops-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:20px 0 25px}
+.ops-summary-card{display:flex;align-items:center;gap:13px;min-width:0;background:linear-gradient(135deg,#fff 0%,#fbfcff 100%);border:1px solid var(--line);border-radius:12px;padding:17px;box-shadow:0 3px 12px rgba(20,35,70,.025);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.ops-summary-card:hover{transform:translateY(-2px);border-color:#cbd9fb;box-shadow:0 9px 22px rgba(30,64,175,.07)}
+.ops-summary-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;flex-shrink:0;font-weight:700}
+.ops-summary-icon.blue{background:#eaf1ff;color:#285fce}.ops-summary-icon.violet{background:#f1edff;color:#7251c7}.ops-summary-icon.green{background:#e5f8ef;color:#16845b}.ops-summary-icon.amber{background:#fff4df;color:#b7791f}
+.ops-summary-card>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.ops-summary-label{font-size:10px;font-weight:600;color:#758096;line-height:1.35}
+.ops-summary-card strong{font-size:25px;letter-spacing:-.8px;line-height:1.1;color:#172033}
+.ops-summary-card small{font-size:9px;color:#9aa2b1;line-height:1.4}
+.branch-overview{margin-top:24px}
+.branch-overview-heading{margin-bottom:16px}
+.branch-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.branch-search{display:flex;align-items:center;gap:9px;min-width:190px;max-width:360px;flex:1;background:#fff;border:1px solid #dfe5ef;border-radius:9px;padding:0 12px;color:#8c97aa;transition:border-color .15s,box-shadow .15s}
+.branch-search:focus-within{border-color:#7aa0f5;box-shadow:0 0 0 3px #2563eb12}
+.branch-search>span{font-size:21px;line-height:1}
+.branch-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;padding:11px 0;font:inherit;font-size:11px;color:var(--ink)}
+.branch-search input::placeholder{color:#a0a8b6}
+.branch-filters{display:flex;align-items:center;gap:4px;background:#edf0f6;border-radius:9px;padding:4px}
+.branch-filter{border:0;background:transparent;color:#69758a;padding:8px 10px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s;white-space:nowrap}
+.branch-filter:hover{color:#1d4ed8}
+.branch-filter.active{background:#fff;color:#234fae;box-shadow:0 1px 3px #17203312}
+.branch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.branch-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;transition:transform .18s,border-color .18s,box-shadow .18s}
+.branch-card:hover{transform:translateY(-2px);border-color:#c9d8fa;box-shadow:0 8px 20px rgba(23,32,51,.055)}
+.branch-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.branch-code{display:inline-flex;align-items:center;justify-content:center;min-width:33px;height:29px;padding:0 8px;border-radius:8px;background:#edf3ff;color:#2c5fc4;font-size:10px;font-weight:800;letter-spacing:.2px}
+.branch-status{display:inline-flex;align-items:center;gap:6px;padding:5px 7px;border-radius:20px;font-size:9px;font-weight:650;white-space:nowrap}
+.branch-status i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.branch-status.is-open{background:#eaf8f0;color:#168052}.branch-status.is-idle{background:#f3f4f7;color:#818a9b}
+.branch-card h3{font-size:13px;letter-spacing:-.2px;line-height:1.4;margin:15px 0 13px;overflow-wrap:anywhere}
+.branch-meta{display:grid;gap:8px;padding-bottom:14px;border-bottom:1px solid #f0f2f6}
+.branch-meta>span{display:flex;align-items:center;gap:8px;font-size:10px;color:#758096}
+.meta-icon{font-style:normal;color:#8498bd;width:14px;text-align:center}
+.branch-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:13px}
+.branch-access{font-size:9px;color:#98a1b0}
+.branch-card-bottom a{display:inline-flex;align-items:center;gap:5px;color:#285fc7;font-size:10px;font-weight:700;white-space:nowrap}
+.branch-card-bottom a:hover{color:#1744a2}
+.branch-card-bottom a span{font-size:13px;transition:transform .15s}
+.branch-card-bottom a:hover span{transform:translate(2px,-2px)}
+.branch-footnote{font-size:9px;line-height:1.6;color:#99a2b1;margin:13px 1px 0}
+.branch-empty{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;border:1px dashed #d9e0ec;border-radius:12px;padding:32px 18px}
+.branch-empty-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#eff4ff;color:#3767c7;font-size:22px;margin-bottom:12px}
+.branch-empty strong{font-size:12px}
+.branch-empty p{max-width:340px;font-size:10px;color:#8590a2;line-height:1.6;margin:7px 0 0}
+.branch-empty .text-link{margin-top:12px;border:0;background:none;cursor:pointer}
+@media(max-width:1150px){.ops-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.branch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.ops-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0 22px}.ops-summary-card{padding:12px;gap:9px;align-items:flex-start}.ops-summary-icon{width:34px;height:34px;border-radius:10px;font-size:17px}.ops-summary-card strong{font-size:22px}.ops-summary-label{font-size:9px}.ops-summary-card small{font-size:8px}.branch-toolbar{align-items:stretch;flex-direction:column}.branch-search{max-width:none}.branch-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.branch-filter{padding:9px 4px;font-size:9px}.branch-grid{grid-template-columns:1fr;gap:10px}.branch-card{padding:15px}.branch-card h3{margin:12px 0}.branch-footnote{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.ops-summary-card,.branch-card,.branch-filter,.branch-card-bottom a span{transition:none}}
