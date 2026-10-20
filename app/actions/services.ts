@@ -26,13 +26,13 @@ export async function saveServiceBranchPrice(formData: FormData): Promise<SaveSe
   if (!/^[1-9]\d*$/.test(durationRaw)) {
     return { ok: false, message: "Durasi harus berupa angka bulat lebih dari 0 menit." };
   }
-  if (!/^(0|[1-9]\d*)$/.test(priceRaw)) {
-    return { ok: false, message: "Harga harus berupa angka rupiah bulat, minimal 0." };
+  if (!/^[1-9]\d*$/.test(priceRaw)) {
+    return { ok: false, message: "Harga harus berupa angka rupiah bulat lebih dari 0." };
   }
 
   const duration = Number(durationRaw);
   const price = Number(priceRaw);
-  if (!Number.isSafeInteger(duration) || duration > 1440 || !Number.isSafeInteger(price)) {
+  if (!Number.isSafeInteger(duration) || duration > 1440 || !Number.isSafeInteger(price) || price < 1) {
     return { ok: false, message: "Durasi atau harga berada di luar batas angka yang aman." };
   }
 
