@@ -122,3 +122,9 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/checkout_smoke_test.sql
+
+      - name: Verify payment confirmation and offline sync write boundaries
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/payment_sync_security_boundary_test.sql
