@@ -47,6 +47,8 @@ export default async function ServicesPage() {
         <nav className="nav-list" aria-label="Navigasi utama">
           <Link className="nav-item" href="/"><span>▦</span> Dashboard</Link>
           <Link className="nav-item" href="/layanan" aria-current="page"><span>◇</span> Layanan & harga</Link>
+          <Link className="nav-item" href="/barber"><span>♙</span> Barber & penugasan</Link>
+          <Link className="nav-item" href="/cabang"><span>⌖</span> Pengaturan cabang</Link>
           <Link className="nav-item" href="/#shift"><span>◷</span> Shift kasir</Link>
         </nav>
         <div className="sidebar-bottom"><span className="status-dot" /><div><strong>{profile.full_name}</strong><small>{profile.role}</small></div></div>
