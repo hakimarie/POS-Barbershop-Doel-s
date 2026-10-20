@@ -53,8 +53,8 @@ BEGIN
     RAISE EXCEPTION 'Duration must be between 1 and 1440 minutes'
       USING ERRCODE = '22023';
   END IF;
-  IF p_price_amount IS NULL OR p_price_amount < 0 THEN
-    RAISE EXCEPTION 'Price must be zero or greater'
+  IF p_price_amount IS NULL OR p_price_amount < 1 THEN
+    RAISE EXCEPTION 'Price must be greater than zero'
       USING ERRCODE = '22023';
   END IF;
   IF p_branch_id IS NULL OR NOT EXISTS (
