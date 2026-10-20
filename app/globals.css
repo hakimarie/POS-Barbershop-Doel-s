@@ -143,3 +143,22 @@
 @media(max-width:1100px){.sales-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.sales-heading{align-items:flex-start;flex-direction:column}.sales-range{align-self:stretch}.sales-range-button{flex:1}.sales-kpis{gap:9px}.sales-kpi{padding:12px;gap:7px}.sales-kpi strong{font-size:17px}.sales-kpi-label{font-size:9px}.sales-kpi small{font-size:8px}.sales-chart-panel{padding:14px 12px 11px}.sales-chart{height:160px;gap:5px;padding-top:12px}.sales-bar-track{height:124px}.sales-chart-empty{height:160px}.sales-chart-label{font-size:8px}.sales-chart-footer{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.sales-kpi,.sales-bar{transition:none}}
+
+
+/* Offline checkout drafts: explicitly local and not yet booked as sales */
+.offline-draft-notice{margin-top:12px}
+.offline-drafts{margin-top:20px;border:1px solid #dbe5f7;border-radius:12px;background:#f9fbff;padding:16px}
+.offline-drafts-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.offline-drafts-heading strong{font-size:12px;color:#253550}
+.offline-drafts-heading>span{font-size:10px;font-weight:700;color:#275bbd;background:#e8efff;border-radius:20px;padding:5px 9px}
+.offline-drafts>p{font-size:10px;color:#7d899d;line-height:1.6;margin:7px 0 12px}
+.offline-draft-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid #e7edf7}
+.offline-draft-item>div:first-child{display:flex;flex-direction:column;gap:5px;min-width:0}
+.offline-draft-item>div:first-child strong{font-size:11px;color:#253550}
+.offline-draft-item>div:first-child span{font-size:10px;color:#69778e}
+.offline-draft-item>div:first-child small{font-size:9px;color:#98a3b4;line-height:1.5}
+.offline-draft-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.offline-draft-actions .secondary-button{padding:8px 10px;font-size:10px}
+.draft-remove{border:0;background:transparent;color:#a34d4d;font-size:10px;font-weight:650;padding:8px 5px;cursor:pointer}
+.draft-remove:hover{color:#842727;text-decoration:underline}
+@media(max-width:650px){.offline-drafts{padding:12px}.offline-draft-item{align-items:flex-start;flex-direction:column}.offline-draft-actions{width:100%;justify-content:flex-start}.offline-draft-actions .secondary-button{flex:1}}
