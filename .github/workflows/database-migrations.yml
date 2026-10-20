@@ -101,6 +101,21 @@ jobs:
               SELECT 1 FROM pg_trigger
               WHERE tgname = 'trg_guard_finalized_sale_item_snapshot' AND NOT tgisinternal
             ) THEN RAISE EXCEPTION 'Sale-item immutability trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_sale_status_transition' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Sale status transition trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_payment_status_transition' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Payment status transition trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_qris_pending_sale_item' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'QRIS pending sale-item lock trigger missing'; END IF;
           END
           $$;
           SQL
