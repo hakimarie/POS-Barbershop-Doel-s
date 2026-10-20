@@ -79,7 +79,7 @@ export default function ServicePriceForm({ branches, services }: { branches: Bra
 
       <div className="service-form-fields service-price-fields">
         <div><label htmlFor="service-branch">Cabang untuk harga</label><select id="service-branch" value={branchId} onChange={(event) => setBranchId(event.target.value)} required>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.code} — {branch.name}</option>)}</select></div>
-        <div><label htmlFor="service-price">Harga (Rp)</label><input id="service-price" type="number" min="0" step="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="Contoh: 50000" required /></div>
+        <div><label htmlFor="service-price">Harga (Rp)</label><input id="service-price" type="number" min="1" step="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="Contoh: 50000" required /></div>
       </div>
 
       <button className="primary-button" type="submit" disabled={pending || branches.length === 0}>{pending ? "Menyimpan..." : "Simpan layanan & harga"}</button>
