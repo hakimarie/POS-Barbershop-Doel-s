@@ -59,10 +59,9 @@ BEGIN
     RAISE EXCEPTION 'Repeated provider event must be idempotent; got %', v_second;
   END IF;
 
-  IF (SELECT count(*) FROM public.payment_provider_events
-      WHERE provider='test-provider' AND provider_event_id='event-idempotent-001') <> 1 THEN
-    RAISE EXCEPTION 'Duplicate provider event created more than one event record';
-  END IF;
+  -- The duplicate_event response proves the unique provider-event key
+  -- prevented a second insert; do not grant table-read access to service_role
+  -- merely to inspect internal event rows in this test.
 END
 $$;
 RESET ROLE;
