@@ -11,10 +11,10 @@ const stats = [
 ];
 
 const quickActions = [
-  { number: "01", title: "Kasir baru", description: "Pilih cabang, barber, dan layanan." },
+  { number: "01", title: "Kasir baru", description: "Pilih cabang, barber, dan layanan.", href: "/kasir" },
   { number: "02", title: "Riwayat transaksi", description: "Tinjau transaksi dan status pembayaran." },
   { number: "03", title: "Shift kasir", description: "Buka atau tutup shift pada perangkat ini." },
-  { number: "04", title: "Kelola layanan", description: "Atur harga layanan untuk tiap cabang." },
+  { number: "04", title: "Kelola layanan", description: "Atur harga layanan untuk tiap cabang.", href: "/layanan" },
 ];
 
 type WorkspaceProfile = {
@@ -74,7 +74,7 @@ export default async function HomePage() {
         <div className="sidebar-label">WORKSPACE</div>
         <nav className="nav-list" aria-label="Navigasi utama">
           <a className="nav-item active" href="#dashboard"><span>▦</span> Dashboard</a>
-          <a className="nav-item" href="#kasir"><span>＋</span> Kasir</a>
+          <Link className="nav-item" href="/kasir"><span>＋</span> Kasir</Link>
           <a className="nav-item" href="#transaksi"><span>↔</span> Transaksi</a>
           <a className="nav-item" href="#shift"><span>◷</span> Shift kasir</a>
           <a className="nav-item" href="#barber"><span>♙</span> Barber & komisi</a>
@@ -100,7 +100,7 @@ export default async function HomePage() {
               <h1>Dashboard operasional</h1>
               <p className="subtitle">Pantau penjualan, shift kasir, dan komisi barber dari satu tempat.</p>
             </div>
-            <button className="primary-button" type="button" disabled title="Akan aktif setelah alur transaksi dibangun">＋ Transaksi baru</button>
+            <Link className="primary-button" href="/kasir">＋ Transaksi baru</Link>
           </div>
 
           {workspace.error ? (
@@ -151,7 +151,7 @@ export default async function HomePage() {
                   <span className="action-number">{action.number}</span>
                   <h3>{action.title}</h3>
                   <p>{action.description}</p>
-                  <span className="coming-soon">Tahap berikutnya <span>↗</span></span>
+                  { "href" in action ? <Link className="coming-soon" href={action.href}>Buka modul <span>↗</span></Link> : <span className="coming-soon">Tahap berikutnya <span>↗</span></span> }
                 </article>
               ))}
             </div>
