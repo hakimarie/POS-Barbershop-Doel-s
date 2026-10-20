@@ -79,7 +79,7 @@ export default async function HomePage() {
           <a className="nav-item" href="#shift"><span>◷</span> Shift kasir</a>
           <Link className="nav-item" href="/barber"><span>♙</span> Barber & penugasan</Link>
           <Link className="nav-item" href="/layanan"><span>◇</span> Layanan & harga</Link>
-          <a className="nav-item" href="#cabang"><span>⌖</span> Cabang</a>
+          <Link className="nav-item" href="/cabang"><span>⌖</span> Pengaturan cabang</Link>
           <a className="nav-item" href="#laporan"><span>▤</span> Laporan</a>
         </nav>
         <div className="sidebar-bottom">
