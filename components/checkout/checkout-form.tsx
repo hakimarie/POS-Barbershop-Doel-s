@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useMemo, useState, useTransition, type FormEvent } from "react";
 import { checkoutSale, type CheckoutResult } from "@/app/actions/checkout";
 
 type Branch = { id: string; code: string; name: string };
@@ -10,6 +10,7 @@ type Service = { id: string; code: string; name: string; duration_minutes: numbe
 type Price = { branch_id: string; service_id: string; price_amount: number; effective_from: string };
 type Barber = { id: string; barber_code: string; full_name: string };
 type Assignment = { branch_id: string; barber_id: string };
+type OfflineDraft = { transactionId: string; branchId: string; deviceId: string; shiftId: string; serviceId: string; barberId: string; quantity: string; totalAtDraft: number; branchLabel: string; serviceLabel: string; barberLabel: string; createdAt: string };
 
 export default function CheckoutForm(props: {
   branches: Branch[]; devices: Device[]; shifts: Shift[]; services: Service[];
@@ -23,8 +24,8 @@ export default function CheckoutForm(props: {
   const [quantity, setQuantity] = useState("1");
   const [method, setMethod] = useState("cash");
   const [transactionId, setTransactionId] = useState(() => crypto.randomUUID());
-  const [result, setResult] = useState<CheckoutResult | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<CheckoutResult | null>(null);\n  const [offlineDrafts, setOfflineDrafts] = useState<OfflineDraft[]>([]);\n  const [offlineNotice, setOfflineNotice] = useState("");
+  const [pending, startTransition] = useTransition();\n\n  useEffect(() => {\n    try { setOfflineDrafts(JSON.parse(window.localStorage.getItem(props.storageKey) ?? "[]") as OfflineDraft[]); }\n    catch { setOfflineDrafts([]); }\n  }, [props.storageKey]);\n\n  function saveDrafts(next: OfflineDraft[]) {\n    setOfflineDrafts(next);\n    try { window.localStorage.setItem(props.storageKey, JSON.stringify(next)); }\n    catch { setOfflineNotice("Penyimpanan draft lokal gagal. Jangan tutup halaman; catat transaksi secara manual sesuai SOP."); }\n  }
 
   const devices = props.devices.filter((item) => item.branch_id === branchId);
   const shifts = props.shifts.filter((item) => item.branch_id === branchId && item.status === "open" && (!deviceId || item.device_id === deviceId));
