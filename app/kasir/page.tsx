@@ -40,6 +40,17 @@ export default async function CashierPage() {
   const barbers = (barberRows ?? []) as Barber[];
   const assignments = ((assignmentRows ?? []) as Assignment[]).filter((a) => !a.effective_to || Date.parse(a.effective_to) > Date.now());
 
+  const missingRequirements = [
+    { label: "Cabang aktif", ok: branches.length > 0, count: branches.length },
+    { label: "Perangkat aktif", ok: devices.length > 0, count: devices.length },
+    { label: "Shift terbuka", ok: shifts.length > 0, count: shifts.length },
+    { label: "Layanan aktif", ok: services.length > 0, count: services.length },
+    { label: "Harga layanan efektif", ok: prices.length > 0, count: prices.length },
+    { label: "Barber aktif", ok: barbers.length > 0, count: barbers.length },
+    { label: "Penugasan barber ke cabang", ok: assignments.length > 0, count: assignments.length },
+  ];
+  const operationalDataComplete = missingRequirements.every((item) => item.ok);
+
   return <main className="app-shell">
     <aside className="sidebar">
       <Link className="brand" href="/" aria-label="KetemuTerus Barber POS beranda"><span className="brand-mark">KT</span><span className="brand-copy"><strong>KetemuTerus</strong><small>BARBER POS</small></span></Link>
@@ -57,8 +68,11 @@ export default async function CashierPage() {
       <div className="content">
         <div className="welcome-row"><div><p className="eyebrow">DOEL'S BARBERSHOP · POINT OF SALE</p><h1>Kasir baru</h1><p className="subtitle">Buat transaksi untuk layanan barber dengan harga efektif per cabang.</p></div><Link className="secondary-button" href="/">← Dashboard</Link></div>
         <div className="notice"><div className="notice-icon">i</div><div><strong>Uji di staging terlebih dahulu</strong><p>Transaksi tunai dicatat lunas. QRIS hanya berstatus menunggu konfirmasi. Komisi tanpa konfigurasi aktif ditandai perlu review dan tidak dihitung sebagai komisi final.</p></div></div>
-        {branches.length && devices.length && shifts.length && services.length && prices.length && barbers.length && assignments.length ? <CheckoutForm branches={branches} devices={devices} shifts={shifts} services={services} prices={prices} barbers={barbers} assignments={assignments} /> :
-          <div className="notice"><div className="notice-icon">!</div><div><strong>Data operasional belum lengkap</strong><p>Pastikan ada cabang dan perangkat aktif, shift terbuka, layanan dengan harga efektif, barber aktif, serta penugasan barber ke cabang ini. Buka shift dari dashboard dan lengkapi master data terlebih dahulu.</p></div></div>}
+        {operationalDataComplete ? <CheckoutForm branches={branches} devices={devices} shifts={shifts} services={services} prices={prices} barbers={barbers} assignments={assignments} /> :
+          <div className="notice"><div className="notice-icon">!</div><div><strong>Data operasional belum lengkap</strong><p>Berikut pemeriksaan data yang dibutuhkan halaman kasir. Angka menunjukkan jumlah data aktif/efektif yang berhasil dibaca untuk organisasi ini.</p>
+            <ul className="operational-checklist">{missingRequirements.map((item) => <li key={item.label}><span aria-hidden="true">{item.ok ? "✓" : "!"}</span><strong>{item.label}</strong><span>{item.count} data</span><em>{item.ok ? "Tersedia" : "Perlu dilengkapi"}</em></li>)}</ul>
+            <p>Lengkapi item yang bertanda “Perlu dilengkapi”, lalu muat ulang halaman. Untuk penugasan barber, pastikan penugasan masih berlaku saat ini dan mengarah ke cabang yang dipilih.</p>
+          </div></div>}
         <footer className="footer">KetemuTerus Barber POS <span>•</span> Kasir <span>•</span> Uji staging</footer>
       </div>
     </section>
