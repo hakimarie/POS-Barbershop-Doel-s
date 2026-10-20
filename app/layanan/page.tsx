@@ -3,7 +3,7 @@ import SignOutButton from "@/components/auth/sign-out-button";
 import ServicePriceForm from "@/components/services/service-price-form";
 import { createClient } from "@/lib/supabase/server";
 
-type Service = { id: string; code: string; name: string; is_active: boolean; category: string };
+type Service = { id: string; code: string; name: string; duration_minutes: number; is_active: boolean; category: string };
 type Branch = { id: string; code: string; name: string; is_active: boolean };
 type Price = { id: string; branch_id: string; service_id: string; price_amount: number; effective_from: string; effective_to: string | null };
 
@@ -21,7 +21,7 @@ export default async function ServicesPage() {
 
   const [{ data: branchRows }, { data: serviceRows }, { data: priceRows }] = await Promise.all([
     supabase.from("branches").select("id, code, name, is_active").eq("organization_id", profile.organization_id).eq("is_active", true).order("code"),
-    supabase.from("services").select("id, code, name, is_active, category").eq("organization_id", profile.organization_id).order("code"),
+    supabase.from("services").select("id, code, name, duration_minutes, is_active, category").eq("organization_id", profile.organization_id).order("code"),
     supabase.from("branch_service_prices").select("id, branch_id, service_id, price_amount, effective_from, effective_to").eq("organization_id", profile.organization_id).is("effective_to", null).order("effective_from", { ascending: false }),
   ]);
 
