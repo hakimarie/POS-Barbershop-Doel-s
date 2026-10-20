@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { saveServiceBranchPrice } from "@/app/actions/services";
 
 type Branch = { id: string; code: string; name: string };
-type Service = { id: string; code: string; name: string };
+type Service = { id: string; code: string; name: string; duration_minutes: number };
 
 export default function ServicePriceForm({ branches, services }: { branches: Branch[]; services: Service[] }) {
   const [serviceId, setServiceId] = useState("");
@@ -29,6 +29,7 @@ export default function ServicePriceForm({ branches, services }: { branches: Bra
     if (selected) {
       setCode(selected.code);
       setName(selected.name);
+      setDuration(String(selected.duration_minutes));
     }
   }, [serviceId, services]);
 
