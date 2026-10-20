@@ -113,7 +113,37 @@ export default function CheckoutForm(props: {
     <div className="checkout-total"><span>Estimasi total</span><strong>Rp {total.toLocaleString("id-ID")}</strong><small>Harga final dihitung ulang oleh database saat checkout.</small></div>
     <button className="primary-button" type="submit" disabled={pending || !branchId || !deviceId || !shiftId || !serviceId || !barberId || !selectedPrice}>{pending ? "Memproses transaksi..." : !isOnline ? "Simpan draft offline" : "Simpan transaksi"}</button>
     {offlineNotice && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">i</div><div><strong>Status draft offline</strong><p>{offlineNotice}</p></div></div>}
-    {offlineDrafts.length > 0 && <section className="offline-drafts" aria-label="Draft offline tersimpan"><div className="offline-drafts-heading"><strong>Draft offline tersimpan</strong><span>{offlineDrafts.length} draft</span></div><p>Draft belum tercatat sebagai penjualan. Saat online, muat satu draft, periksa harga terbaru, lalu kirim secara manual.</p>{offlineDrafts.map((draft) => <article className="offline-draft-item" key={draft.transactionId}><div><strong>{draft.serviceLabel} × {draft.quantity}</strong><span>{draft.branchLabel} · {draft.barberLabel}</span><small>Dibuat {new Date(draft.createdAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} · estimasi saat draft Rp {draft.totalAtDraft.toLocaleString("id-ID")}</small></div><div className="offline-draft-actions"><button type="button" className="secondary-button" onClick={() => { setBranchId(draft.branchId); setDeviceId(draft.deviceId); setShiftId(draft.shiftId); setServiceId(draft.serviceId); setBarberId(draft.barberId); setQuantity(draft.quantity); setMethod("cash"); setTransactionId(draft.transactionId); setResult(null); setOfflineNotice("Draft dimuat. Pastikan perangkat dan shift masih aktif serta harga terbaru sesuai sebelum mengirim."); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Muat draft</button><button type="button" className="draft-remove" onClick={() => saveDrafts(offlineDrafts.filter((item) => item.transactionId !== draft.transactionId))} aria-label={`Hapus draft ${draft.serviceLabel}`}>Hapus</button></div></article>)}</section>
+    {offlineDrafts.length > 0 && (
+      <section className="offline-drafts" aria-label="Draft offline tersimpan">
+        <div className="offline-drafts-heading"><strong>Draft offline tersimpan</strong><span>{offlineDrafts.length} draft</span></div>
+        <p>Draft belum tercatat sebagai penjualan. Saat online, muat satu draft, periksa harga terbaru, lalu kirim secara manual.</p>
+        {offlineDrafts.map((draft) => (
+          <article className="offline-draft-item" key={draft.transactionId}>
+            <div>
+              <strong>{draft.serviceLabel} × {draft.quantity}</strong>
+              <span>{draft.branchLabel} · {draft.barberLabel}</span>
+              <small>Dibuat {new Date(draft.createdAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} · estimasi saat draft Rp {draft.totalAtDraft.toLocaleString("id-ID")}</small>
+            </div>
+            <div className="offline-draft-actions">
+              <button type="button" className="secondary-button" onClick={() => {
+                setBranchId(draft.branchId);
+                setDeviceId(draft.deviceId);
+                setShiftId(draft.shiftId);
+                setServiceId(draft.serviceId);
+                setBarberId(draft.barberId);
+                setQuantity(draft.quantity);
+                setMethod("cash");
+                setTransactionId(draft.transactionId);
+                setResult(null);
+                setOfflineNotice("Draft dimuat. Pastikan perangkat dan shift masih aktif serta harga terbaru sesuai sebelum mengirim.");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}>Muat draft</button>
+              <button type="button" className="draft-remove" onClick={() => saveDrafts(offlineDrafts.filter((item) => item.transactionId !== draft.transactionId))} aria-label="Hapus draft">Hapus</button>
+            </div>
+          </article>
+        ))}
+      </section>
+    )}
     {!shifts.length && <p className="architecture-footnote">Belum ada shift terbuka untuk perangkat/cabang pilihan. Buka shift terlebih dahulu di dashboard.</p>}
     {result && <div className={result.ok ? "notice checkout-result" : "notice checkout-error"} role="status">
       <div className="notice-icon">{result.ok ? "✓" : "!"}</div><div><strong>{result.ok ? "Hasil checkout" : "Transaksi gagal"}</strong><p>{result.message}</p>
