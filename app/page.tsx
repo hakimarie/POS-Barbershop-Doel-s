@@ -90,7 +90,7 @@ export default async function HomePage() {
         <div className="content">
           <div className="welcome-row">
             <div>
-              <p className="eyebrow">DOEL'S BARBERSHOP · MULTI-CABANG</p>
+              <p className="eyebrow">DOEL&apos;S BARBERSHOP · MULTI-CABANG</p>
               <h1>Dashboard operasional</h1>
               <p className="subtitle">Pantau penjualan, shift kasir, dan komisi barber dari satu tempat.</p>
             </div>
