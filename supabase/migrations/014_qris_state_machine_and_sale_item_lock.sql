@@ -91,6 +91,22 @@ BEGIN
   END IF;
 
   IF v_sale_status IN ('paid', 'partially_refunded', 'refunded', 'cancelled', 'review_required') THEN
+    -- Cash checkout creates the sale row as paid before inserting its first
+    -- item and payment, all in one transaction. Permit only that initial item
+    -- while neither an item nor a payment exists; subsequent additions are blocked.
+    IF TG_OP = 'INSERT'
+       AND NOT EXISTS (
+         SELECT 1 FROM public.sale_items AS existing_item
+         WHERE existing_item.organization_id = v_org_id
+           AND existing_item.sale_id = v_sale_id
+       )
+       AND NOT EXISTS (
+         SELECT 1 FROM public.payments AS existing_payment
+         WHERE existing_payment.organization_id = v_org_id
+           AND existing_payment.sale_id = v_sale_id
+       ) THEN
+      RETURN NEW;
+    END IF;
     RAISE EXCEPTION 'Cannot add or change sale items on a finalized sale'
       USING ERRCODE = '23514';
   END IF;
