@@ -67,7 +67,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $finalized$
 DECLARE
   v_sale_id uuid;
   v_org_id uuid;
@@ -114,7 +114,7 @@ BEGIN
   IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
   RETURN NEW;
 END;
-$;
+$finalized$;
 
 REVOKE ALL ON FUNCTION private.kt_guard_finalized_sale_item_snapshot() FROM PUBLIC, anon, authenticated;
 DROP TRIGGER IF EXISTS trg_guard_finalized_sale_item_snapshot ON public.sale_items;
