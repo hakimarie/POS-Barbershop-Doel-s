@@ -116,3 +116,9 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/service_pricing_smoke_test.sql
+
+      - name: Verify checkout idempotency and QRIS pending state
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/checkout_smoke_test.sql
