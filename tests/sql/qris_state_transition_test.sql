@@ -53,7 +53,9 @@ SELECT * FROM public.kt_checkout_sale(
   '66000000-0000-4000-8000-000000000011',1,'qris','68000000-0000-4000-8000-000000000012'
 );
 
-DO $$
+RESET ROLE;
+
+DO $
 DECLARE
   v_sale_paid uuid;
   v_sale_expired uuid;
