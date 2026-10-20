@@ -1,5 +1,6 @@
 -- KetemuTerus Barber POS — Migration 012
 -- Seed Doel's Barbershop service catalogue without creating branch prices.
+-- Duration is retained only for legacy schema compatibility; it is not shown or used as a branch SOP.
 BEGIN;
 
 ALTER TABLE public.services
@@ -27,11 +28,11 @@ SELECT o.id, seed.code, seed.name, seed.duration_minutes, true, 'Service Lainnya
 FROM public.organizations o
 CROSS JOIN (
   VALUES
-    ('TRIM-SHAV', 'Trim / Shaving', 15),
+    ('TRIM-SHAV', 'Trim / Shaving', 30),
     ('CREAMBATH', 'Creambath', 30),
-    ('MASKER', 'Masker', 15),
+    ('MASKER', 'Masker', 30),
     ('COLOR-PREM-STEP', 'Colouring Premium per Step', 30),
-    ('COLOR-REG', 'Colouring Reguler', 60),
+    ('COLOR-REG', 'Colouring Reguler', 30),
     ('COLOR-SVC-ONLY', 'Colouring Service Only', 30)
 ) AS seed(code, name, duration_minutes)
 WHERE o.slug = 'doels-barbershop'
