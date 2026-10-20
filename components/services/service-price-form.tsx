@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { saveServiceBranchPrice } from "@/app/actions/services";
 
 type Branch = { id: string; code: string; name: string };
-type Service = { id: string; code: string; name: string; duration_minutes: number };
+type Service = { id: string; code: string; name: string };
 
 export default function ServicePriceForm({ branches, services }: { branches: Branch[]; services: Service[] }) {
   const [serviceId, setServiceId] = useState("");
@@ -29,7 +29,6 @@ export default function ServicePriceForm({ branches, services }: { branches: Bra
     if (selected) {
       setCode(selected.code);
       setName(selected.name);
-      setDuration(String(selected.duration_minutes));
     }
   }, [serviceId, services]);
 
@@ -64,7 +63,7 @@ export default function ServicePriceForm({ branches, services }: { branches: Bra
     <form className="service-form" onSubmit={handleSubmit}>
       <div className="service-form-intro">
         <h3>Tambah layanan atau atur harga cabang</h3>
-        <p>Pilih “Layanan baru” untuk membuat katalog. Pilih layanan yang ada untuk mengubah detailnya sekaligus menetapkan harga baru pada cabang yang dipilih.</p>
+        <p>Pilih “Layanan baru” untuk membuat katalog. Pilih layanan yang ada untuk menetapkan harga pada cabang yang dipilih. Durasi tidak diatur di katalog pusat karena SOP tiap cabang dapat berbeda.</p>
       </div>
       <label htmlFor="service-existing">Layanan</label>
       <select id="service-existing" value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
@@ -75,7 +74,6 @@ export default function ServicePriceForm({ branches, services }: { branches: Bra
       <div className="service-form-fields">
         <div><label htmlFor="service-code">Kode layanan</label><input id="service-code" value={code} onChange={(event) => setCode(event.target.value)} maxLength={40} placeholder="Contoh: CUT-REG" required /></div>
         <div><label htmlFor="service-name">Nama layanan</label><input id="service-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={120} placeholder="Contoh: Haircut Regular" required /></div>
-        <div><label htmlFor="service-duration">Durasi (menit)</label><input id="service-duration" type="number" min="1" max="1440" step="1" value={duration} onChange={(event) => setDuration(event.target.value)} required /></div>
       </div>
 
       <div className="service-form-fields service-price-fields">
