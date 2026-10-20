@@ -44,7 +44,7 @@ export default async function BarberPage() {
     <section className="main-panel">
       <header className="topbar"><div className="breadcrumbs"><Link href="/">Workspace</Link><span>/</span><strong>Barber</strong></div><div className="topbar-right"><span className="offline-pill"><i /> Master data</span><div className="avatar">DO</div><SignOutButton /></div></header>
       <div className="content">
-        <div className="welcome-row"><div><p className="eyebrow">DOEL'S BARBERSHOP · MASTER DATA</p><h1>Barber & penugasan</h1><p className="subtitle">Kelola barber aktif dan cabang tempat mereka dapat menerima transaksi.</p></div><Link className="secondary-button" href="/">← Dashboard</Link></div>
+        <div className="welcome-row"><div><p className="eyebrow">DOEL&apos;S BARBERSHOP · MASTER DATA</p><h1>Barber & penugasan</h1><p className="subtitle">Kelola barber aktif dan cabang tempat mereka dapat menerima transaksi.</p></div><Link className="secondary-button" href="/">← Dashboard</Link></div>
         {!canManage ? <div className="notice"><div className="notice-icon">i</div><div><strong>Mode lihat saja</strong><p>Hanya owner/admin yang dapat menambah atau mengaktifkan barber dan penugasan cabang.</p></div></div> : <BarberAssignmentForm branches={branches} />}
         <section className="section-block">
           <div className="section-heading"><div><h2>Daftar barber</h2><p>Penugasan aktif ditentukan berdasarkan periode efektif.</p></div><span className="section-count">{barbers.filter((b) => b.is_active).length} BARBER AKTIF</span></div>
