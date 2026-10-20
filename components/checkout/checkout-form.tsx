@@ -60,7 +60,16 @@ export default function CheckoutForm(props: {
     setBranchId(value); setDeviceId(""); setShiftId(""); setServiceId(""); setBarberId(""); setResult(null);
   }
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setResult(null);
+    event.preventDefault(); setResult(null); setOfflineNotice("");
+    if (!isOnline) {
+      if (method !== "cash") { setOfflineNotice("QRIS tidak dapat dibuat saat offline. Sambungkan internet sebelum memulai pembayaran QRIS."); return; }
+      if (!selectedPrice || !branchId || !deviceId || !shiftId || !serviceId || !barberId) { setOfflineNotice("Lengkapi cabang, perangkat, shift, layanan, dan barber sebelum menyimpan draft."); return; }
+      const draft: OfflineDraft = { transactionId, branchId, deviceId, shiftId, serviceId, barberId, quantity, totalAtDraft: total, branchLabel: props.branches.find((item) => item.id === branchId)?.name ?? "Cabang", serviceLabel: props.services.find((item) => item.id === serviceId)?.name ?? "Layanan", barberLabel: props.barbers.find((item) => item.id === barberId)?.full_name ?? "Barber", createdAt: new Date().toISOString() };
+      saveDrafts([draft, ...offlineDrafts.filter((item) => item.transactionId !== transactionId)]);
+      setOfflineNotice("Draft tunai tersimpan di perangkat ini, belum menjadi transaksi resmi dan belum memiliki nomor struk. Setelah online, muat draft, periksa harga dan shift, lalu simpan transaksi.");
+      setTransactionId(crypto.randomUUID()); setServiceId(""); setBarberId(""); setQuantity("1");
+      return;
+    }
     const data = new FormData();
     data.set("branch_id", branchId); data.set("device_id", deviceId); data.set("shift_id", shiftId);
     data.set("service_id", serviceId); data.set("barber_id", barberId); data.set("quantity", quantity);
@@ -69,6 +78,7 @@ export default function CheckoutForm(props: {
       const response = await checkoutSale(data);
       setResult(response);
       if (response.ok) {
+        saveDrafts(offlineDrafts.filter((item) => item.transactionId !== transactionId));
         setTransactionId(crypto.randomUUID()); setQuantity("1"); setServiceId(""); setBarberId("");
       }
     });
@@ -101,7 +111,9 @@ export default function CheckoutForm(props: {
       <div><label htmlFor="checkout-payment">Metode pembayaran</label><select id="checkout-payment" value={method} onChange={(e) => setMethod(e.target.value)}><option value="cash">Tunai</option><option value="qris">QRIS — menunggu konfirmasi</option></select></div>
     </div>
     <div className="checkout-total"><span>Estimasi total</span><strong>Rp {total.toLocaleString("id-ID")}</strong><small>Harga final dihitung ulang oleh database saat checkout.</small></div>
-    <button className="primary-button" type="submit" disabled={pending || !branchId || !deviceId || !shiftId || !serviceId || !barberId || !selectedPrice}>{pending ? "Memproses transaksi..." : "Simpan transaksi"}</button>
+    <button className="primary-button" type="submit" disabled={pending || !branchId || !deviceId || !shiftId || !serviceId || !barberId || !selectedPrice}>{pending ? "Memproses transaksi..." : !isOnline ? "Simpan draft offline" : "Simpan transaksi"}</button>
+    {offlineNotice && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">i</div><div><strong>Status draft offline</strong><p>{offlineNotice}</p></div></div>}
+    {offlineDrafts.length > 0 && <section className="offline-drafts" aria-label="Draft offline tersimpan"><div className="offline-drafts-heading"><strong>Draft offline tersimpan</strong><span>{offlineDrafts.length} draft</span></div><p>Draft belum tercatat sebagai penjualan. Saat online, muat satu draft, periksa harga terbaru, lalu kirim secara manual.</p>{offlineDrafts.map((draft) => <article className="offline-draft-item" key={draft.transactionId}><div><strong>{draft.serviceLabel} × {draft.quantity}</strong><span>{draft.branchLabel} · {draft.barberLabel}</span><small>Dibuat {new Date(draft.createdAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} · estimasi saat draft Rp {draft.totalAtDraft.toLocaleString("id-ID")}</small></div><div className="offline-draft-actions"><button type="button" className="secondary-button" onClick={() => { setBranchId(draft.branchId); setDeviceId(draft.deviceId); setShiftId(draft.shiftId); setServiceId(draft.serviceId); setBarberId(draft.barberId); setQuantity(draft.quantity); setMethod("cash"); setTransactionId(draft.transactionId); setResult(null); setOfflineNotice("Draft dimuat. Pastikan perangkat dan shift masih aktif serta harga terbaru sesuai sebelum mengirim."); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Muat draft</button><button type="button" className="draft-remove" onClick={() => saveDrafts(offlineDrafts.filter((item) => item.transactionId !== draft.transactionId))} aria-label={`Hapus draft ${draft.serviceLabel}`}>Hapus</button></div></article>)}</section>
     {!shifts.length && <p className="architecture-footnote">Belum ada shift terbuka untuk perangkat/cabang pilihan. Buka shift terlebih dahulu di dashboard.</p>}
     {result && <div className={result.ok ? "notice checkout-result" : "notice checkout-error"} role="status">
       <div className="notice-icon">{result.ok ? "✓" : "!"}</div><div><strong>{result.ok ? "Hasil checkout" : "Transaksi gagal"}</strong><p>{result.message}</p>
