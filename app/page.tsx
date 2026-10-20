@@ -10,7 +10,7 @@ const stats = [
   { label: "Status sinkronisasi", value: "Siap", note: "Antrean offline belum diaktifkan" },
 ];
 
-const quickActions = [
+const quickActions: { number: string; title: string; description: string; href?: string }[] = [
   { number: "01", title: "Kasir baru", description: "Pilih cabang, barber, dan layanan.", href: "/kasir" },
   { number: "02", title: "Riwayat transaksi", description: "Tinjau transaksi dan status pembayaran." },
   { number: "03", title: "Shift kasir", description: "Buka atau tutup shift pada perangkat ini." },
@@ -151,7 +151,7 @@ export default async function HomePage() {
                   <span className="action-number">{action.number}</span>
                   <h3>{action.title}</h3>
                   <p>{action.description}</p>
-                  { "href" in action ? <Link className="coming-soon" href={action.href}>Buka modul <span>↗</span></Link> : <span className="coming-soon">Tahap berikutnya <span>↗</span></span> }
+                  {action.href ? <Link className="coming-soon" href={action.href}>Buka modul <span>↗</span></Link> : <span className="coming-soon">Tahap berikutnya <span>↗</span></span> }
                 </article>
               ))}
             </div>
