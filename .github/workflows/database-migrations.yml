@@ -155,3 +155,9 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/qris_state_transition_test.sql
+
+      - name: Verify cash shift close and reconciliation
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/cash_shift_close_test.sql
