@@ -3,7 +3,7 @@ import SignOutButton from "@/components/auth/sign-out-button";
 import ServicePriceForm from "@/components/services/service-price-form";
 import { createClient } from "@/lib/supabase/server";
 
-type Service = { id: string; code: string; name: string; duration_minutes: number; is_active: boolean; category: string };
+type Service = { id: string; code: string; name: string; is_active: boolean; category: string };
 type Branch = { id: string; code: string; name: string; is_active: boolean };
 type Price = { id: string; branch_id: string; service_id: string; price_amount: number; effective_from: string; effective_to: string | null };
 
@@ -21,7 +21,7 @@ export default async function ServicesPage() {
 
   const [{ data: branchRows }, { data: serviceRows }, { data: priceRows }] = await Promise.all([
     supabase.from("branches").select("id, code, name, is_active").eq("organization_id", profile.organization_id).eq("is_active", true).order("code"),
-    supabase.from("services").select("id, code, name, duration_minutes, is_active, category").eq("organization_id", profile.organization_id).order("code"),
+    supabase.from("services").select("id, code, name, is_active, category").eq("organization_id", profile.organization_id).order("code"),
     supabase.from("branch_service_prices").select("id, branch_id, service_id, price_amount, effective_from, effective_to").eq("organization_id", profile.organization_id).is("effective_to", null).order("effective_from", { ascending: false }),
   ]);
 
@@ -30,8 +30,7 @@ export default async function ServicesPage() {
   const prices = ((priceRows ?? []) as Price[]).filter((price) => new Date(price.effective_from).getTime() <= Date.now());
   const canManage = profile.role === "owner" || profile.role === "admin";
   const branchMap = new Map(branches.map((branch) => [branch.id, branch]));
-  const serviceMap = new Map(services.map((service) => [service.id, service]));
-  const groupedPrices = new Map<string, Price[]>();
+    const groupedPrices = new Map<string, Price[]>();
   for (const price of prices) {
     const key = price.service_id;
     const list = groupedPrices.get(key) ?? [];
@@ -62,10 +61,10 @@ export default async function ServicesPage() {
           <section className="section-block">
             <div className="section-heading"><div><h2>Katalog layanan aktif</h2><p>Harga ditampilkan per cabang berdasarkan periode efektif saat ini.</p></div><span className="section-count">{services.filter((service) => service.is_active).length} LAYANAN</span></div>
             {services.length === 0 ? <div className="notice"><div className="notice-icon">i</div><div><strong>Belum ada layanan</strong><p>Tambahkan layanan pertama menggunakan formulir di atas.</p></div></div> : (
-              <div className="service-table-wrap"><table className="service-table"><thead><tr><th>Kategori</th><th>Kode</th><th>Layanan</th><th>Durasi</th><th>Harga per cabang</th><th>Status</th></tr></thead><tbody>
+              <div className="service-table-wrap"><table className="service-table"><thead><tr><th>Kategori</th><th>Kode</th><th>Layanan</th><th>Harga per cabang</th><th>Status</th></tr></thead><tbody>
                 {services.map((service) => {
                   const servicePrices = (groupedPrices.get(service.id) ?? []).sort((a, b) => (branchMap.get(a.branch_id)?.code ?? "").localeCompare(branchMap.get(b.branch_id)?.code ?? ""));
-                  return <tr key={service.id}><td>{service.category === "Service Lainnya" ? "Service Lainnya" : "Hair Cut & Styling"}</td><td><span className="service-code">{service.code}</span></td><td><strong>{service.name}</strong></td><td>{service.duration_minutes} menit</td><td><div className="branch-price-list">{servicePrices.length ? servicePrices.map((price) => <div key={price.id}><span>{branchMap.get(price.branch_id)?.name ?? branchMap.get(price.branch_id)?.code ?? "Cabang"}</span><strong>Rp {Number(price.price_amount).toLocaleString("id-ID")}</strong></div>) : <span className="muted-text">Harga belum diatur</span>}</div></td><td><span className={service.is_active ? "status-tag active-tag" : "status-tag inactive-tag"}>{service.is_active ? "Aktif" : "Nonaktif"}</span></td></tr>;
+                  return <tr key={service.id}><td>{service.category === "Service Lainnya" ? "Service Lainnya" : "Hair Cut & Styling"}</td><td><span className="service-code">{service.code}</span></td><td><strong>{service.name}</strong></td><td><div className="branch-price-list">{servicePrices.length ? servicePrices.map((price) => <div key={price.id}><span>{branchMap.get(price.branch_id)?.name ?? branchMap.get(price.branch_id)?.code ?? "Cabang"}</span><strong>Rp {Number(price.price_amount).toLocaleString("id-ID")}</strong></div>) : <span className="muted-text">Harga belum diatur</span>}</div></td><td><span className={service.is_active ? "status-tag active-tag" : "status-tag inactive-tag"}>{service.is_active ? "Aktif" : "Nonaktif"}</span></td></tr>;
                 })}
               </tbody></table></div>
             )}
