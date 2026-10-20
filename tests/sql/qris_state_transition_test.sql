@@ -55,7 +55,7 @@ SELECT * FROM public.kt_checkout_sale(
 
 RESET ROLE;
 
-DO $
+DO $qris$
 DECLARE
   v_sale_paid uuid;
   v_sale_expired uuid;
@@ -117,7 +117,7 @@ BEGIN
     RAISE EXCEPTION 'Repeated provider event must be idempotent; got %',v_result;
   END IF;
 END
-$$;
+$qris$;
 
 RESET ROLE;
 ROLLBACK;
