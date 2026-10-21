@@ -68,7 +68,7 @@ BEGIN
   END IF;
 
 END
-$;
+$$;
 -- Change membership as the migration owner, not as the authenticated test role.
 RESET ROLE;
 UPDATE public.branch_memberships
