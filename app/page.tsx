@@ -57,7 +57,7 @@ async function getWorkspaceContext() {
   }
 }
 
-async function getSalesOverview(organizationId: string): Promise<{ days: SalesDay[]; pendingPayments: number; error: string | null }> {
+async function getSalesOverview(organizationId: string, branchIds?: string[]): Promise<{ days: SalesDay[]; pendingPayments: number; error: string | null }> {
   const now = new Date();
   const start = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
   const dayKey = (date: Date) => new Intl.DateTimeFormat("en-CA", {
@@ -69,19 +69,14 @@ async function getSalesOverview(organizationId: string): Promise<{ days: SalesDa
   });
   try {
     const supabase = await createClient();
-    const [{ data: sales, error: salesError }, { count: pendingPayments, error: pendingError }] = await Promise.all([
-      supabase.from("sales")
-        .select("id, status, total_amount, created_at")
-        .eq("organization_id", organizationId)
-        .gte("created_at", start.toISOString())
-        .order("created_at", { ascending: true })
-        .limit(10000),
-      supabase.from("sales")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", organizationId)
-        .eq("status", "pending_payment")
-        .gte("created_at", start.toISOString()),
-    ]);
+    if (branchIds && branchIds.length === 0) return { days, pendingPayments: 0, error: null };
+    let salesQuery = supabase.from("sales").select("id, branch_id, status, total_amount, created_at").eq("organization_id", organizationId).gte("created_at", start.toISOString()).order("created_at", { ascending: true }).limit(10000);
+    let pendingQuery = supabase.from("sales").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "pending_payment").gte("created_at", start.toISOString());
+    if (branchIds) {
+      salesQuery = salesQuery.in("branch_id", branchIds);
+      pendingQuery = pendingQuery.in("branch_id", branchIds);
+    }
+    const [{ data: sales, error: salesError }, { count: pendingPayments, error: pendingError }] = await Promise.all([salesQuery, pendingQuery]);
     if (salesError || pendingError) {
       return { days, pendingPayments: 0, error: "Periksa izin baca tabel sales dan policy RLS. Angka tidak ditampilkan bila query gagal." };
     }
@@ -103,8 +98,9 @@ async function getSalesOverview(organizationId: string): Promise<{ days: SalesDa
 
 export default async function HomePage() {
   const workspace = await getWorkspaceContext();
+  const isCentralRole = workspace.profile?.role === "owner" || workspace.profile?.role === "admin";
   const salesOverview = workspace.profile && !workspace.error
-    ? await getSalesOverview(workspace.profile.organization_id)
+    ? await getSalesOverview(workspace.profile.organization_id, isCentralRole ? undefined : workspace.branches.map((branch) => branch.id))
     : null;
   return (
     <main className="app-shell">
@@ -117,12 +113,8 @@ export default async function HomePage() {
         <nav className="nav-list" aria-label="Navigasi utama">
           <a className="nav-item active" href="#dashboard"><span>▦</span> Dashboard</a>
           <Link className="nav-item" href="/kasir"><span>＋</span> Kasir</Link>
-          <a className="nav-item" href="#transaksi"><span>↔</span> Transaksi</a>
           <a className="nav-item" href="#shift"><span>◷</span> Shift kasir</a>
-          <Link className="nav-item" href="/barber"><span>♙</span> Barber & penugasan</Link>
-          <Link className="nav-item" href="/layanan"><span>◇</span> Layanan & harga</Link>
-          <Link className="nav-item" href="/cabang"><span>⌖</span> Pengaturan cabang</Link>
-          <a className="nav-item" href="#laporan"><span>▤</span> Laporan</a>
+          {isCentralRole ? <><Link className="nav-item" href="/barber"><span>♙</span> Barber & penugasan</Link><Link className="nav-item" href="/layanan"><span>◇</span> Layanan & harga</Link><Link className="nav-item" href="/cabang"><span>⌖</span> Pengaturan cabang</Link><a className="nav-item" href="#laporan"><span>▤</span> Laporan</a></> : null}
         </nav>
         <div className="sidebar-bottom">
           <span className="status-dot" />
@@ -139,10 +131,10 @@ export default async function HomePage() {
           <div className="welcome-row">
             <div>
               <p className="eyebrow">DOEL&apos;S BARBERSHOP · MULTI-CABANG</p>
-              <h1>Dashboard operasional</h1>
-              <p className="subtitle">Pantau penjualan, shift kasir, dan komisi barber dari satu tempat.</p>
+              <h1>{isCentralRole ? "Dashboard pusat" : workspace.profile?.role === "manager" ? "Dashboard manajer cabang" : workspace.profile?.role === "barber" ? "Dashboard barber" : "Dashboard kasir"}</h1>
+              <p className="subtitle">{isCentralRole ? "Pantau performa lintas cabang, penjualan, dan status operasional Doel’s Barbershop." : "Pantau operasional dan transaksi hanya pada cabang yang ditugaskan ke akun Anda."}</p>
             </div>
-            <Link className="primary-button" href="/kasir">＋ Transaksi baru</Link>
+            {workspace.profile && workspace.profile.role !== "barber" ? <Link className="primary-button" href="/kasir">＋ Transaksi baru</Link> : null}
           </div>
 
           {workspace.error ? (
@@ -153,7 +145,7 @@ export default async function HomePage() {
           ) : (
             <BranchOverview branches={workspace.branches} devices={workspace.devices} activeShifts={workspace.activeShifts} />
           )}
-          {!workspace.error ? (
+          {!workspace.error && workspace.profile && ["owner", "admin", "manager", "cashier"].includes(workspace.profile.role) ? (
             <OpenCashShiftForm branches={workspace.branches} devices={workspace.devices} activeShifts={workspace.activeShifts} />
           ) : null}
           {salesOverview ? (
@@ -180,9 +172,9 @@ export default async function HomePage() {
           </section>
 
           <section className="section-block">
-            <div className="section-heading"><div><h2>Akses cepat</h2><p>Area kerja utama untuk operasional harian.</p></div><span className="section-count">04 MODUL</span></div>
+            <div className="section-heading"><div><h2>{isCentralRole ? "Akses manajemen" : "Akses operasional"}</h2><p>{isCentralRole ? "Kontrol lintas cabang dan konfigurasi organisasi." : "Modul yang relevan untuk pekerjaan cabang Anda."}</p></div><span className="section-count">{isCentralRole ? "MANAJEMEN" : "CABANG"}</span></div>
             <div className="actions-grid">
-              {quickActions.map((action) => (
+              {quickActions.filter((action) => isCentralRole || action.href === "/kasir").map((action) => (
                 <article className="action-card" key={action.number}>
                   <span className="action-number">{action.number}</span>
                   <h3>{action.title}</h3>
