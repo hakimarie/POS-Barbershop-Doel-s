@@ -29,6 +29,7 @@ export default function CheckoutForm(props: {
   const [offlineDrafts, setOfflineDrafts] = useState<OfflineDraft[]>([]);
   const [isOnline, setIsOnline] = useState(true);
   const [offlineNotice, setOfflineNotice] = useState("");
+  const [savingDraft, setSavingDraft] = useState(false);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -72,13 +73,18 @@ export default function CheckoutForm(props: {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setResult(null); setOfflineNotice("");
     if (!isOnline) {
+      if (savingDraft) return;
       if (method !== "cash") { setOfflineNotice("QRIS tidak dapat dibuat saat offline. Sambungkan internet sebelum memulai pembayaran QRIS."); return; }
       if (!selectedPrice || !branchId || !deviceId || !shiftId || !serviceId || !barberId) { setOfflineNotice("Lengkapi cabang, perangkat, shift, layanan, dan barber sebelum menyimpan draft."); return; }
       const draft: OfflineDraft = { transactionId, branchId, deviceId, shiftId, serviceId, barberId, quantity, totalAtDraft: total, branchLabel: props.branches.find((item) => item.id === branchId)?.name ?? "Cabang", serviceLabel: props.services.find((item) => item.id === serviceId)?.name ?? "Layanan", barberLabel: props.barbers.find((item) => item.id === barberId)?.full_name ?? "Barber", createdAt: new Date().toISOString() };
+      setSavingDraft(true);
       void saveDrafts([draft, ...offlineDrafts.filter((item) => item.transactionId !== transactionId)])
-        .then(() => setOfflineNotice("Draft tunai tersimpan di IndexedDB pada perangkat ini. Draft belum menjadi transaksi resmi dan belum memiliki nomor struk. Setelah online, muat draft, periksa harga dan shift, lalu simpan transaksi."))
-        .catch(() => undefined);
-      setTransactionId(crypto.randomUUID()); setServiceId(""); setBarberId(""); setQuantity("1");
+        .then(() => {
+          setOfflineNotice("Draft tunai tersimpan di IndexedDB pada perangkat ini. Draft belum menjadi transaksi resmi dan belum memiliki nomor struk. Setelah online, muat draft, periksa harga dan shift, lalu simpan transaksi.");
+          setTransactionId(crypto.randomUUID()); setServiceId(""); setBarberId(""); setQuantity("1");
+        })
+        .catch(() => undefined)
+        .finally(() => setSavingDraft(false));
       return;
     }
     const data = new FormData();
@@ -121,8 +127,10 @@ export default function CheckoutForm(props: {
       <div><label htmlFor="checkout-quantity">Jumlah layanan</label><input id="checkout-quantity" type="number" min="1" max="20" step="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} required /></div>
       <div><label htmlFor="checkout-payment">Metode pembayaran</label><select id="checkout-payment" value={method} onChange={(e) => setMethod(e.target.value)}><option value="cash">Tunai</option><option value="qris">QRIS — menunggu konfirmasi</option></select></div>
     </div>
+    {!isOnline && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">!</div><div><strong>Mode offline aktif</strong><p>Hanya draft tunai yang dapat disimpan lokal. Draft bukan transaksi resmi; QRIS dinonaktifkan sampai koneksi kembali.</p></div></div>}
+    {isOnline && offlineDrafts.length > 0 && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">i</div><div><strong>{offlineDrafts.length} draft menunggu pemeriksaan</strong><p>Draft tidak dikirim otomatis. Muat setiap draft, pastikan shift masih terbuka dan harga sesuai, lalu kirim dengan ID transaksi yang sama agar retry aman.</p></div></div>}
     <div className="checkout-total"><span>Estimasi total</span><strong>Rp {total.toLocaleString("id-ID")}</strong><small>Harga final dihitung ulang oleh database saat checkout.</small></div>
-    <button className="primary-button" type="submit" disabled={pending || !branchId || !deviceId || !shiftId || !serviceId || !barberId || !selectedPrice}>{pending ? "Memproses transaksi..." : !isOnline ? "Simpan draft offline" : "Simpan transaksi"}</button>
+    <button className="primary-button" type="submit" disabled={pending || savingDraft || !branchId || !deviceId || !shiftId || !serviceId || !barberId || !selectedPrice}>{pending ? "Memproses transaksi..." : savingDraft ? "Menyimpan draft..." : !isOnline ? "Simpan draft offline" : "Simpan transaksi"}</button>
     {offlineNotice && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">i</div><div><strong>Status draft offline</strong><p>{offlineNotice}</p></div></div>}
     {offlineDrafts.length > 0 && (
       <section className="offline-drafts" aria-label="Draft offline tersimpan">
