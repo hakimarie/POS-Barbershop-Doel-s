@@ -32,9 +32,24 @@ export default async function CashierPage() {
     supabase.from("barber_branch_assignments").select("branch_id,barber_id,effective_from,effective_to").eq("organization_id",profile.organization_id).lte("effective_from",now),
   ]);
 
-  const branches = (branchRows ?? []) as Branch[];
-  const devices = (deviceRows ?? []) as Device[];
-  const shifts = (shiftRows ?? []) as Shift[];
+  let allowedBranchIds: Set<string> | null = null;
+  if (profile.role !== "owner" && profile.role !== "admin") {
+    const { data: memberships, error: membershipError } = await supabase
+      .from("branch_memberships")
+      .select("branch_id")
+      .eq("organization_id", profile.organization_id)
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+    if (membershipError) {
+      return <main className="auth-shell"><section className="auth-card"><h1>Akses cabang belum dapat diverifikasi</h1><p className="auth-description">Kasir ditutup sampai keanggotaan cabang dapat diverifikasi. Periksa policy RLS dan coba lagi.</p><Link className="text-link" href="/">Kembali ke dashboard →</Link></section></main>;
+    }
+    allowedBranchIds = new Set((memberships ?? []).map((membership) => membership.branch_id as string));
+  }
+  const branches = ((branchRows ?? []) as Branch[]).filter((branch) => allowedBranchIds === null || allowedBranchIds.has(branch.id));
+  const branchIds = new Set(branches.map((branch) => branch.id));
+  const devices = ((deviceRows ?? []) as Device[]).filter((device) => branchIds.has(device.branch_id));
+  const deviceIds = new Set(devices.map((device) => device.id));
+  const shifts = ((shiftRows ?? []) as Shift[]).filter((shift) => branchIds.has(shift.branch_id) && deviceIds.has(shift.device_id));
   const services = (serviceRows ?? []) as Service[];
   const prices = (priceRows ?? []) as Price[];
   const barbers = (barberRows ?? []) as Barber[];
