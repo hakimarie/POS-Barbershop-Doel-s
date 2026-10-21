@@ -5,6 +5,7 @@ BEGIN;
 INSERT INTO auth.users (id) VALUES
   ('10000000-0000-4000-8000-000000000001'),
   ('10000000-0000-4000-8000-000000000002'),
+  ('10000000-0000-4000-8000-000000000003'),
   ('20000000-0000-4000-8000-000000000001');
 
 INSERT INTO public.organizations (id, name, slug) VALUES
@@ -14,6 +15,7 @@ INSERT INTO public.organizations (id, name, slug) VALUES
 INSERT INTO public.users (id, organization_id, full_name, email, role) VALUES
   ('10000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001', 'Branch Manager', 'manager@example.test', 'manager'),
   ('10000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000001', 'Other Manager', 'other@example.test', 'manager'),
+  ('10000000-0000-4000-8000-000000000003', '30000000-0000-4000-8000-000000000001', 'Central Owner', 'central@example.test', 'owner'),
   ('20000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000002', 'Other Tenant Owner', 'owner@example.test', 'owner');
 
 INSERT INTO public.branches (id, organization_id, code, name) VALUES
@@ -23,7 +25,9 @@ INSERT INTO public.branches (id, organization_id, code, name) VALUES
 
 INSERT INTO public.branch_memberships (organization_id, branch_id, user_id) VALUES
   ('30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001'),
-  ('30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000002');
+  ('30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000002'),
+  ('30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000003'),
+  ('30000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000003');
 
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000001', true);
@@ -51,6 +55,27 @@ BEGIN
     )
   ) THEN
     RAISE EXCEPTION 'Branch manager can see an unassigned branch or another tenant';
+  END IF;
+
+  -- Owner can see all branches in their own organization, but never another tenant.
+  PERFORM set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000003', true);
+  SELECT count(*) INTO visible_branches FROM public.branches;
+  IF visible_branches <> 2 THEN
+    RAISE EXCEPTION 'Owner should see both branches in their organization; saw %', visible_branches;
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.branches WHERE id = '40000000-0000-4000-8000-000000000003') THEN
+    RAISE EXCEPTION 'Owner can see another tenant branch';
+  END IF;
+
+  -- An inactive membership must not grant branch access.
+  UPDATE public.branch_memberships
+  SET is_active = false
+  WHERE user_id = '10000000-0000-4000-8000-000000000001'
+    AND branch_id = '40000000-0000-4000-8000-000000000001';
+  PERFORM set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000001', true);
+  SELECT count(*) INTO visible_branches FROM public.branches;
+  IF visible_branches <> 0 THEN
+    RAISE EXCEPTION 'Inactive membership must not grant branch visibility; saw % branches', visible_branches;
   END IF;
 END
 $$;
