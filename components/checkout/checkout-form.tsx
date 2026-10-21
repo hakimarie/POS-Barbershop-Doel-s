@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition, type FormEvent } from "react";
 import { checkoutSale, type CheckoutResult } from "@/app/actions/checkout";
+import { loadOfflineDrafts, saveOfflineDrafts, type OfflineDraftRecord } from "@/lib/offline-drafts";
 
 type Branch = { id: string; code: string; name: string };
 type Device = { id: string; branch_id: string; device_code: string; device_name: string };
@@ -10,7 +11,7 @@ type Service = { id: string; code: string; name: string; duration_minutes: numbe
 type Price = { branch_id: string; service_id: string; price_amount: number; effective_from: string };
 type Barber = { id: string; barber_code: string; full_name: string };
 type Assignment = { branch_id: string; barber_id: string };
-type OfflineDraft = { transactionId: string; branchId: string; deviceId: string; shiftId: string; serviceId: string; barberId: string; quantity: string; totalAtDraft: number; branchLabel: string; serviceLabel: string; barberLabel: string; createdAt: string };
+type OfflineDraft = OfflineDraftRecord;
 
 export default function CheckoutForm(props: {
   branches: Branch[]; devices: Device[]; shifts: Shift[]; services: Service[];
@@ -31,8 +32,13 @@ export default function CheckoutForm(props: {
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    try { setOfflineDrafts(JSON.parse(window.localStorage.getItem(props.storageKey) ?? "[]") as OfflineDraft[]); }
-    catch { setOfflineDrafts([]); }
+    let cancelled = false;
+    loadOfflineDrafts(props.storageKey).then((drafts) => {
+      if (!cancelled) setOfflineDrafts(drafts);
+    }).catch(() => {
+      if (!cancelled) setOfflineNotice("Draft lokal tidak dapat dibaca. Jangan hapus data browser; periksa penyimpanan perangkat sebelum melanjutkan.");
+    });
+    return () => { cancelled = true; };
   }, [props.storageKey]);
 
   useEffect(() => {
@@ -43,10 +49,14 @@ export default function CheckoutForm(props: {
     return () => { window.removeEventListener("online", updateConnection); window.removeEventListener("offline", updateConnection); };
   }, []);
 
-  function saveDrafts(next: OfflineDraft[]) {
-    setOfflineDrafts(next);
-    try { window.localStorage.setItem(props.storageKey, JSON.stringify(next)); }
-    catch { setOfflineNotice("Penyimpanan draft lokal gagal. Jangan tutup halaman; catat transaksi secara manual sesuai SOP."); }
+  async function saveDrafts(next: OfflineDraft[]) {
+    try {
+      await saveOfflineDrafts(props.storageKey, next);
+      setOfflineDrafts(next);
+    } catch {
+      setOfflineNotice("Penyimpanan draft lokal gagal. Jangan tutup halaman; catat transaksi secara manual sesuai SOP.");
+      throw new Error("Penyimpanan draft lokal gagal");
+    }
   }
 
   const devices = props.devices.filter((item) => item.branch_id === branchId);
@@ -65,8 +75,9 @@ export default function CheckoutForm(props: {
       if (method !== "cash") { setOfflineNotice("QRIS tidak dapat dibuat saat offline. Sambungkan internet sebelum memulai pembayaran QRIS."); return; }
       if (!selectedPrice || !branchId || !deviceId || !shiftId || !serviceId || !barberId) { setOfflineNotice("Lengkapi cabang, perangkat, shift, layanan, dan barber sebelum menyimpan draft."); return; }
       const draft: OfflineDraft = { transactionId, branchId, deviceId, shiftId, serviceId, barberId, quantity, totalAtDraft: total, branchLabel: props.branches.find((item) => item.id === branchId)?.name ?? "Cabang", serviceLabel: props.services.find((item) => item.id === serviceId)?.name ?? "Layanan", barberLabel: props.barbers.find((item) => item.id === barberId)?.full_name ?? "Barber", createdAt: new Date().toISOString() };
-      saveDrafts([draft, ...offlineDrafts.filter((item) => item.transactionId !== transactionId)]);
-      setOfflineNotice("Draft tunai tersimpan di perangkat ini, belum menjadi transaksi resmi dan belum memiliki nomor struk. Setelah online, muat draft, periksa harga dan shift, lalu simpan transaksi.");
+      void saveDrafts([draft, ...offlineDrafts.filter((item) => item.transactionId !== transactionId)])
+        .then(() => setOfflineNotice("Draft tunai tersimpan di IndexedDB pada perangkat ini. Draft belum menjadi transaksi resmi dan belum memiliki nomor struk. Setelah online, muat draft, periksa harga dan shift, lalu simpan transaksi."))
+        .catch(() => undefined);
       setTransactionId(crypto.randomUUID()); setServiceId(""); setBarberId(""); setQuantity("1");
       return;
     }
@@ -78,7 +89,7 @@ export default function CheckoutForm(props: {
       const response = await checkoutSale(data);
       setResult(response);
       if (response.ok) {
-        saveDrafts(offlineDrafts.filter((item) => item.transactionId !== transactionId));
+        void saveDrafts(offlineDrafts.filter((item) => item.transactionId !== transactionId)).catch(() => undefined);
         setTransactionId(crypto.randomUUID()); setQuantity("1"); setServiceId(""); setBarberId("");
       }
     });
@@ -138,7 +149,9 @@ export default function CheckoutForm(props: {
                 setOfflineNotice("Draft dimuat. Pastikan perangkat dan shift masih aktif serta harga terbaru sesuai sebelum mengirim.");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}>Muat draft</button>
-              <button type="button" className="draft-remove" onClick={() => saveDrafts(offlineDrafts.filter((item) => item.transactionId !== draft.transactionId))} aria-label="Hapus draft">Hapus</button>
+              <button type="button" className="draft-remove" onClick={() => {
+                void saveDrafts(offlineDrafts.filter((item) => item.transactionId !== draft.transactionId)).catch(() => undefined);
+              }} aria-label="Hapus draft">Hapus</button>
             </div>
           </article>
         ))}
