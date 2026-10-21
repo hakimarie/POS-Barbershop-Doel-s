@@ -67,18 +67,28 @@ BEGIN
     RAISE EXCEPTION 'Owner can see another tenant branch';
   END IF;
 
-  -- An inactive membership must not grant branch access.
-  UPDATE public.branch_memberships
-  SET is_active = false
-  WHERE user_id = '10000000-0000-4000-8000-000000000001'
-    AND branch_id = '40000000-0000-4000-8000-000000000001';
-  PERFORM set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000001', true);
+END
+$;
+
+-- Change membership as the migration owner, not as the authenticated test role.
+RESET ROLE;
+UPDATE public.branch_memberships
+SET is_active = false
+WHERE user_id = '10000000-0000-4000-8000-000000000001'
+  AND branch_id = '40000000-0000-4000-8000-000000000001';
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000001', true);
+DO $
+DECLARE
+  visible_branches integer;
+BEGIN
   SELECT count(*) INTO visible_branches FROM public.branches;
   IF visible_branches <> 0 THEN
     RAISE EXCEPTION 'Inactive membership must not grant branch visibility; saw % branches', visible_branches;
   END IF;
 END
-$$;
+$;
 
 RESET ROLE;
 ROLLBACK;
