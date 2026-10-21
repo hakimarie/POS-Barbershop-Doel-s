@@ -79,7 +79,7 @@ WHERE user_id = '10000000-0000-4000-8000-000000000001'
 
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000001', true);
-DO $
+DO $inactive_membership$
 DECLARE
   visible_branches integer;
 BEGIN
@@ -88,7 +88,7 @@ BEGIN
     RAISE EXCEPTION 'Inactive membership must not grant branch visibility; saw % branches', visible_branches;
   END IF;
 END
-$;
+$inactive_membership$;
 
 RESET ROLE;
 ROLLBACK;
