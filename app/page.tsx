@@ -51,7 +51,25 @@ async function getWorkspaceContext() {
     if (branchError || deviceError || shiftError) {
       return { profile, organizationName: org?.name ?? null, branches: [], devices: [], activeShifts: [], error: "Profil terverifikasi, tetapi cabang atau perangkat tidak dapat dimuat. Periksa policy RLS." };
     }
-    return { profile, organizationName: org?.name ?? null, branches: (branchData ?? []) as WorkspaceBranch[], devices: (deviceData ?? []) as WorkspaceDevice[], activeShifts: shiftData ?? [], error: null };
+    let allowedBranchIds: string[] | null = null;
+    if (profile.role !== "owner" && profile.role !== "admin") {
+      const { data: memberships, error: membershipError } = await supabase
+        .from("branch_memberships")
+        .select("branch_id")
+        .eq("organization_id", profile.organization_id)
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+      if (membershipError) {
+        return { profile, organizationName: org?.name ?? null, branches: [], devices: [], activeShifts: [], error: "Keanggotaan cabang belum dapat diverifikasi. Akses ditutup sampai policy RLS dan membership diperiksa." };
+      }
+      allowedBranchIds = [...new Set((memberships ?? []).map((membership) => membership.branch_id as string))];
+    }
+    const scopedBranches = (branchData ?? []).filter((branch) => allowedBranchIds === null || allowedBranchIds.includes(branch.id)) as WorkspaceBranch[];
+    const scopedBranchIds = new Set(scopedBranches.map((branch) => branch.id));
+    const scopedDevices = ((deviceData ?? []) as WorkspaceDevice[]).filter((device) => scopedBranchIds.has(device.branch_id));
+    const scopedDeviceIds = new Set(scopedDevices.map((device) => device.id));
+    const scopedShifts = (shiftData ?? []).filter((shift) => scopedDeviceIds.has(shift.device_id));
+    return { profile, organizationName: org?.name ?? null, branches: scopedBranches, devices: scopedDevices, activeShifts: scopedShifts, error: null };
   } catch {
     return { profile: null, organizationName: null, branches: [], devices: [], activeShifts: [], error: "Supabase belum siap atau konfigurasi server belum lengkap." };
   }
