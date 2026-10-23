@@ -234,35 +234,22 @@ export default async function HomePage() {
             <SalesPerformance days={salesOverview.days} pendingPayments={salesOverview.pendingPayments} dataError={salesOverview.error} />
           ) : null}
 
-          <section className="ops-summary" aria-label="Ringkasan operasional">
-            <article className="ops-summary-card">
-              <span className="ops-summary-icon blue">⌖</span>
-              <div><span className="ops-summary-label">Cabang dapat diakses</span><strong>{workspace.branches.length}</strong><small>Dari data organisasi aktif</small></div>
-            </article>
-            <article className="ops-summary-card">
-              <span className="ops-summary-icon violet">▣</span>
-              <div><span className="ops-summary-label">Perangkat aktif</span><strong>{workspace.devices.length}</strong><small>Terdaftar di workspace</small></div>
-            </article>
-            <article className="ops-summary-card">
-              <span className="ops-summary-icon green">◷</span>
-              <div><span className="ops-summary-label">Shift terbuka</span><strong>{workspace.activeShifts.filter((shift) => shift.status === "open").length}</strong><small>Termasuk perangkat yang terhubung</small></div>
-            </article>
-            <article className="ops-summary-card">
-              <span className="ops-summary-icon amber">!</span>
-              <div><span className="ops-summary-label">Perlu ditinjau</span><strong>{workspace.activeShifts.filter((shift) => shift.status === "review_required").length}</strong><small>Shift dengan status review</small></div>
-            </article>
+          <section className="ops-summary ops-summary-compact" aria-label="Ringkasan operasional">
+            <article className="ops-summary-card"><span className="ops-summary-label">Cabang</span><strong>{workspace.branches.length}</strong></article>
+            <article className="ops-summary-card"><span className="ops-summary-label">Perangkat</span><strong>{workspace.devices.length}</strong></article>
+            <article className="ops-summary-card"><span className="ops-summary-label">Shift terbuka</span><strong>{workspace.activeShifts.filter((shift) => shift.status === "open").length}</strong></article>
+            <article className="ops-summary-card"><span className="ops-summary-label">Perlu ditinjau</span><strong>{workspace.activeShifts.filter((shift) => shift.status === "review_required").length}</strong></article>
           </section>
 
-          <section className="section-block">
-            <div className="section-heading"><div><h2>{isCentralRole ? "Akses manajemen" : "Akses operasional"}</h2><p>{isCentralRole ? "Kontrol lintas cabang dan konfigurasi organisasi." : "Modul yang relevan untuk pekerjaan cabang Anda."}</p></div><span className="section-count">{isCentralRole ? "MANAJEMEN" : "CABANG"}</span></div>
+          <section className="section-block management-shortcuts">
+            <div className="section-heading"><div><h2>{isCentralRole ? "Menu utama" : "Menu operasional"}</h2></div></div>
             <div className="actions-grid">
               {quickActions.filter((action) => isCentralRole || action.href === "/kasir").map((action) => (
-                <article className="action-card" key={action.number}>
+                <Link className="action-card action-card-compact" href={action.href} key={action.number}>
                   <span className="action-number">{action.number}</span>
                   <h3>{action.title}</h3>
-                  <p>{action.description}</p>
-                  <Link className="coming-soon" href={action.href}>Buka modul <span>↗</span></Link>
-                </article>
+                  <span className="compact-action-arrow" aria-hidden="true">↗</span>
+                </Link>
               ))}
             </div>
           </section>
