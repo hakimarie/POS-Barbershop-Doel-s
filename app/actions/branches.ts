@@ -41,3 +41,30 @@ export async function renameBranch(formData: FormData): Promise<RenameBranchResu
     return { ok: false, message: "Tidak dapat menghubungi Supabase. Periksa koneksi dan konfigurasi." };
   }
 }
+
+
+export async function createBranch(formData: FormData): Promise<RenameBranchResult> {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name || name.length > 120) return { ok: false, message: "Nama cabang wajib diisi, maksimal 120 karakter." };
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { ok: false, message: "Sesi tidak valid. Silakan login kembali." };
+
+    const { error } = await supabase.rpc("kt_create_branch", { p_branch_name: name });
+    if (error) {
+      if (error.code === "42501") return { ok: false, message: "Akses ditolak. Hanya owner/admin aktif yang dapat menambah cabang." };
+      if (error.code === "22023") return { ok: false, message: error.message };
+      if (error.code === "PGRST202" || error.code === "42883") return { ok: false, message: "Fitur tambah cabang belum aktif. Terapkan migration 016 di Supabase staging terlebih dahulu." };
+      return { ok: false, message: `Cabang belum tersimpan (database ${error.code ?? "error"}). Pastikan migration 016 sudah diterapkan.` };
+    }
+
+    revalidatePath("/");
+    revalidatePath("/cabang");
+    revalidatePath("/kasir");
+    return { ok: true, message: "Cabang berhasil ditambahkan bersama perangkat kasir utama." };
+  } catch {
+    return { ok: false, message: "Tidak dapat menghubungi Supabase. Periksa koneksi dan konfigurasi." };
+  }
+}
