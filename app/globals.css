@@ -162,3 +162,32 @@
 .draft-remove{border:0;background:transparent;color:#a34d4d;font-size:10px;font-weight:650;padding:8px 5px;cursor:pointer}
 .draft-remove:hover{color:#842727;text-decoration:underline}
 @media(max-width:650px){.offline-drafts{padding:12px}.offline-draft-item{align-items:flex-start;flex-direction:column}.offline-draft-actions{width:100%;justify-content:flex-start}.offline-draft-actions .secondary-button{flex:1}}
+
+/* Dashboard onboarding for the barbershop POS */
+.onboarding-panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:23px;margin-top:29px}
+.onboarding-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+.onboarding-header .eyebrow{margin-bottom:7px}
+.onboarding-header h2{font-size:19px;letter-spacing:-.5px;margin:0}
+.onboarding-header p:not(.eyebrow){font-size:11px;color:var(--muted);line-height:1.55;margin:7px 0 0}
+.onboarding-progress{display:flex;flex-direction:column;align-items:flex-end;white-space:nowrap}
+.onboarding-progress strong{font-size:23px;letter-spacing:-.8px}
+.onboarding-progress span{font-size:10px;color:var(--muted);margin-top:2px}
+.progress-track{height:7px;background:#edf0f5;border-radius:99px;overflow:hidden;margin:19px 0 17px}
+.progress-track span{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .2s ease}
+.onboarding-steps{display:grid;gap:9px}
+.onboarding-step{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;align-items:center;gap:13px;padding:13px 14px;border:1px solid #edf0f5;border-radius:10px;min-width:0}
+.onboarding-step.is-complete{background:#f7fbf8;border-color:#d9efe1}
+.onboarding-step-number{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:#eff4ff;color:#285bc1;font-size:11px;font-weight:750}
+.is-complete .onboarding-step-number{background:#dff5e7;color:#187746}
+.onboarding-step-copy{min-width:0}
+.onboarding-step-copy h3{font-size:12px;margin:0 0 4px}
+.onboarding-step-copy p{font-size:10px;line-height:1.5;color:var(--muted);margin:0}
+.onboarding-status{font-size:9px;font-weight:700;padding:6px 8px;border-radius:99px;white-space:nowrap}
+.status-done{background:#e2f7e9;color:#187746}
+.status-pending{background:#fff4dc;color:#95620b}
+.status-unknown{background:#f0f1f5;color:#626b7c}
+.onboarding-link{font-size:10px;font-weight:700;color:var(--blue);white-space:nowrap}
+.onboarding-link span{margin-left:3px}
+.onboarding-footnote{font-size:10px;line-height:1.5;color:#7b8495;margin:14px 0 0}
+@media(max-width:900px){.onboarding-step{grid-template-columns:34px minmax(0,1fr) auto}.onboarding-status{grid-column:2;justify-self:start}.onboarding-link{grid-column:3;grid-row:1/3;align-self:center}}
+@media(max-width:600px){.onboarding-panel{padding:16px}.onboarding-header{gap:10px}.onboarding-header h2{font-size:17px}.onboarding-progress strong{font-size:20px}.onboarding-step{padding:11px 9px;gap:9px}.onboarding-step-copy p{font-size:9px}.onboarding-status{font-size:8px}.onboarding-link{font-size:9px}}
