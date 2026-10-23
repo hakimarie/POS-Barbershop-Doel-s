@@ -29,7 +29,7 @@ export default async function SettingsPage() {
 
   const groups: { title: string; items: SettingItem[] }[] = [
     { title: "Umum", items: [
-      { title: "Profil Barbershop", description: "Nama usaha, logo pada struk, alamat, jam operasional, dan kontak.", status: "Pengaturan profil belum tersedia", icon: "⌂" },
+      { title: "Profil Barbershop", description: "Nama usaha, logo pada struk, alamat, jam operasional, dan kontak.", status: "Konfigurasi profil usaha", href: "/pengaturan/profil", icon: "⌂" },
       { title: "Langganan", description: "Status paket POS, masa aktif, dan informasi tagihan.", status: "Belum terhubung", icon: "◇" },
     ]},
     { title: "Penjualan dan struk", items: [
