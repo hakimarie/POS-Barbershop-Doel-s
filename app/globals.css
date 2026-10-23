@@ -209,3 +209,27 @@
 .onboarding-footnote{display:none}
 @media(max-width:600px){.onboarding-panel{padding:13px;margin-top:16px}.onboarding-step{grid-template-columns:26px minmax(0,1fr) auto 22px;gap:7px;padding:7px}.onboarding-step-title{font-size:10px}.onboarding-status{font-size:7px;padding:4px 5px}.onboarding-link{width:22px;height:22px}}
 
+
+/* Minimal branch monitor and create-branch action */
+.branch-overview-simple{margin-top:18px}
+.branch-overview-simple .branch-overview-heading{align-items:center;margin-bottom:10px}
+.branch-overview-simple .branch-overview-heading h2{font-size:13px}
+.branch-overview-simple .branch-overview-heading p{font-size:10px;margin-top:4px}
+.branch-add-button{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;background:var(--blue);color:#fff;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap}
+.branch-add-button span{font-size:15px;line-height:1}
+.branch-grid-simple{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.branch-card-simple{padding:13px 15px;border-radius:10px}
+.branch-card-simple .branch-card-top{margin-bottom:9px}
+.branch-card-simple-main{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.branch-card-simple-main h3{font-size:13px;margin:0}
+.branch-card-simple-main p{font-size:10px;color:var(--muted);margin:4px 0 0}
+.branch-card-simple-main>a{font-size:10px;font-weight:700;color:var(--blue);white-space:nowrap}
+.branch-expand-button{display:flex;align-items:center;gap:7px;margin:9px auto 0;padding:6px 9px;border:0;background:transparent;color:var(--blue);font-size:10px;font-weight:700;cursor:pointer}
+.branch-expand-button span{font-size:12px}
+.branch-create-fields{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px}
+.branch-create-fields>div{display:flex;flex-direction:column;gap:6px}
+.branch-create-fields label{font-size:11px;font-weight:650}
+.branch-create-fields input{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:11px 12px;font:inherit;font-size:12px;background:#fff}
+.branch-create-fields .form-submit-button{margin:0}
+.branch-create-form{margin-bottom:16px}
+@media(max-width:600px){.branch-overview-simple .branch-overview-heading{align-items:flex-start}.branch-add-button{padding:7px 8px;font-size:9px}.branch-card-simple{padding:11px}.branch-card-simple-main h3{font-size:12px}.branch-create-fields{grid-template-columns:minmax(0,1fr)}.branch-create-fields .form-submit-button{width:100%}}
