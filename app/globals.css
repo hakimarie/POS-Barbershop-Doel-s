@@ -208,3 +208,19 @@
 .onboarding-link span{margin:0}
 .onboarding-footnote{display:none}
 @media(max-width:600px){.onboarding-panel{padding:13px;margin-top:16px}.onboarding-step{grid-template-columns:26px minmax(0,1fr) auto 22px;gap:7px;padding:7px}.onboarding-step-title{font-size:10px}.onboarding-status{font-size:7px;padding:4px 5px}.onboarding-link{width:22px;height:22px}}
+
+/* Compact operational summary and main menu */
+.ops-summary-compact{gap:9px;margin:15px 0 19px}
+.ops-summary-compact .ops-summary-card{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;min-height:0;border-radius:9px;box-shadow:none}
+.ops-summary-compact .ops-summary-label{font-size:10px;line-height:1.25}
+.ops-summary-compact .ops-summary-card strong{font-size:19px;letter-spacing:-.5px}
+.management-shortcuts{margin-top:20px}
+.management-shortcuts .section-heading{margin-bottom:9px}
+.management-shortcuts .section-heading h2{font-size:13px}
+.action-card-compact{min-height:0!important;padding:12px 13px!important;display:grid!important;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:10px;transition:border-color .15s,background .15s}
+.action-card-compact:hover{border-color:#c8d7fb;background:#fbfdff}
+.action-card-compact .action-number{width:27px;height:27px;margin:0}
+.action-card-compact h3{font-size:11px;margin:0;line-height:1.35}
+.compact-action-arrow{font-size:13px;color:#6483ce;justify-self:end}
+@media(max-width:1000px){.ops-summary-compact{grid-template-columns:repeat(4,minmax(0,1fr))}.ops-summary-compact .ops-summary-card{align-items:flex-start;flex-direction:column;gap:5px;padding:10px}}
+@media(max-width:700px){.ops-summary-compact{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ops-summary-compact .ops-summary-card{flex-direction:row;align-items:center;padding:10px 12px}.action-card-compact{grid-template-columns:26px minmax(0,1fr) 14px;gap:8px;padding:10px!important}.action-card-compact h3{font-size:10px}}
