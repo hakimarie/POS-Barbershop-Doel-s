@@ -241,18 +241,7 @@ export default async function HomePage() {
             <article className="ops-summary-card"><span className="ops-summary-label">Perlu ditinjau</span><strong>{workspace.activeShifts.filter((shift) => shift.status === "review_required").length}</strong></article>
           </section>
 
-          <section className="section-block management-shortcuts">
-            <div className="section-heading"><div><h2>{isCentralRole ? "Menu utama" : "Menu operasional"}</h2></div></div>
-            <div className="actions-grid">
-              {quickActions.filter((action) => isCentralRole || action.href === "/kasir").map((action) => (
-                <Link className="action-card action-card-compact" href={action.href} key={action.number}>
-                  <span className="action-number">{action.number}</span>
-                  <h3>{action.title}</h3>
-                  <span className="compact-action-arrow" aria-hidden="true">↗</span>
-                </Link>
-              ))}
-            </div>
-          </section>
+          
 
           {isCentralRole && !workspace.error && workspace.profile ? (
             <OnboardingChecklist steps={await getSetupSteps(workspace.profile.organization_id, workspace.branches, workspace.devices, workspace.activeShifts)} />
