@@ -1,0 +1,163 @@
+name: Database Migration Smoke Test
+
+on:
+  push:
+    branches:
+      - feat/initial-pos-foundation
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+      - "tests/sql/**"
+      - ".github/workflows/database-migrations.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  migration-smoke-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: barber_pos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d barber_pos_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up disposable Supabase Auth compatibility objects
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/bootstrap.sql
+
+      - name: Apply migrations in order
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -euo pipefail
+          for migration in supabase/migrations/[0-9][0-9][0-9]_*.sql; do
+            echo "Applying $migration"
+            psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f "$migration"
+          done
+
+      - name: Verify expected tables, RLS, and integrity triggers
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE
+            expected_tables text[] := ARRAY[
+              'organizations','users','branches','branch_memberships','devices',
+              'services','branch_service_prices','barbers','barber_branch_assignments',
+              'commission_tiers','commission_tier_versions','barber_commission_assignments',
+              'cash_shifts','sales','sale_items','payments','payment_provider_events',
+              'commission_entries','commission_review_cases','commission_payouts',
+              'commission_payout_items','sale_adjustments','idempotency_records',
+              'sync_batches','audit_logs'
+            ];
+            table_name text;
+          BEGIN
+            FOREACH table_name IN ARRAY expected_tables LOOP
+              IF to_regclass('public.' || table_name) IS NULL THEN
+                RAISE EXCEPTION 'Expected table public.% is missing', table_name;
+              END IF;
+              IF NOT (
+                SELECT c.relrowsecurity
+                FROM pg_class c
+                WHERE c.oid = to_regclass('public.' || table_name)
+              ) THEN
+                RAISE EXCEPTION 'RLS is not enabled on public.%', table_name;
+              END IF;
+            END LOOP;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_cash_shift_device_branch' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Cash shift integrity trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_sale_shift_device_branch' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Sale integrity trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_commission_entry_matches_sale_item' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Commission integrity trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_finalized_sale_item_snapshot' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Sale-item immutability trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_sale_status_transition' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Sale status transition trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_payment_status_transition' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'Payment status transition trigger missing'; END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_guard_qris_pending_sale_item' AND NOT tgisinternal
+            ) THEN RAISE EXCEPTION 'QRIS pending sale-item lock trigger missing'; END IF;
+          END
+          $$;
+          SQL
+
+      - name: Verify tenant and branch isolation under authenticated role
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/rls_smoke_test.sql
+
+      - name: Verify service pricing RPC guardrails
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/service_pricing_smoke_test.sql
+
+      - name: Verify checkout idempotency and QRIS pending state
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/checkout_smoke_test.sql
+
+      - name: Verify payment confirmation and offline sync write boundaries
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/payment_sync_security_boundary_test.sql
+
+      - name: Verify trusted QRIS event permissions and idempotency
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/qris_trusted_event_smoke_test.sql
+
+      - name: Verify QRIS state transitions and sale-item locking
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/qris_state_transition_test.sql
+
+      - name: Verify cash shift close and reconciliation
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/cash_shift_close_test.sql

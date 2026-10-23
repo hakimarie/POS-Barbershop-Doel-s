@@ -1,0 +1,11 @@
+{
+  "id": "/",
+  "name": "KetemuTerus Barber POS",
+  "short_name": "Barber POS",
+  "description": "Sistem kasir multi-cabang Doel's Barbershop",
+  "lang": "id-ID",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8fb",
+  "theme_color": "#111827"
+}
