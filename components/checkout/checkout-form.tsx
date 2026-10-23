@@ -30,6 +30,8 @@ export default function CheckoutForm(props: {
   const [isOnline, setIsOnline] = useState(true);
   const [offlineNotice, setOfflineNotice] = useState("");
   const [savingDraft, setSavingDraft] = useState(false);
+  const [priceChangePending, setPriceChangePending] = useState<string | null>(null);
+  const [priceChangeAcknowledged, setPriceChangeAcknowledged] = useState(false);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -69,9 +71,14 @@ export default function CheckoutForm(props: {
 
   function changeBranch(value: string) {
     setBranchId(value); setDeviceId(""); setShiftId(""); setServiceId(""); setBarberId(""); setResult(null);
+    setPriceChangePending(null); setPriceChangeAcknowledged(false);
   }
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setResult(null); setOfflineNotice("");
+    if (priceChangePending && !priceChangeAcknowledged) {
+      setOfflineNotice("Harga draft berubah. Tinjau estimasi total terbaru lalu centang konfirmasi perubahan harga sebelum menyimpan transaksi.");
+      return;
+    }
     if (!isOnline) {
       if (savingDraft) return;
       if (method !== "cash") { setOfflineNotice("QRIS tidak dapat dibuat saat offline. Sambungkan internet sebelum memulai pembayaran QRIS."); return; }
@@ -116,7 +123,7 @@ export default function CheckoutForm(props: {
       </select></div>
     </div>
     <div className="service-form-fields">
-      <div><label htmlFor="checkout-service">Layanan</label><select id="checkout-service" value={serviceId} onChange={(e) => setServiceId(e.target.value)} required>
+      <div><label htmlFor="checkout-service">Layanan</label><select id="checkout-service" value={serviceId} onChange={(e) => { setServiceId(e.target.value); setPriceChangePending(null); setPriceChangeAcknowledged(false); }} required>
         <option value="">Pilih layanan</option>{services.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name} ({s.duration_minutes} menit)</option>)}
       </select></div>
       <div><label htmlFor="checkout-barber">Barber</label><select id="checkout-barber" value={barberId} onChange={(e) => setBarberId(e.target.value)} required>
@@ -130,6 +137,7 @@ export default function CheckoutForm(props: {
     {!isOnline && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">!</div><div><strong>Mode offline aktif</strong><p>Hanya draft tunai yang dapat disimpan lokal. Draft bukan transaksi resmi; QRIS dinonaktifkan sampai koneksi kembali.</p></div></div>}
     {isOnline && offlineDrafts.length > 0 && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">i</div><div><strong>{offlineDrafts.length} draft menunggu pemeriksaan</strong><p>Draft tidak dikirim otomatis. Muat setiap draft, pastikan shift masih terbuka dan harga sesuai, lalu kirim dengan ID transaksi yang sama agar retry aman.</p></div></div>}
     <div className="checkout-total"><span>Estimasi total</span><strong>Rp {total.toLocaleString("id-ID")}</strong><small>Harga final dihitung ulang oleh database saat checkout.</small></div>
+    {priceChangePending && <label className="offline-price-confirmation"><input type="checkbox" checked={priceChangeAcknowledged} onChange={(e) => setPriceChangeAcknowledged(e.target.checked)} /> Saya memahami {priceChangePending} dan menyetujui penggunaan estimasi harga terbaru. Harga final tetap ditentukan server.</label>}
     <button className="primary-button" type="submit" disabled={pending || savingDraft || !branchId || !deviceId || !shiftId || !serviceId || !barberId || !selectedPrice}>{pending ? "Memproses transaksi..." : savingDraft ? "Menyimpan draft..." : !isOnline ? "Simpan draft offline" : "Simpan transaksi"}</button>
     {offlineNotice && <div className="notice offline-draft-notice" role="status"><div className="notice-icon">i</div><div><strong>Status draft offline</strong><p>{offlineNotice}</p></div></div>}
     {offlineDrafts.length > 0 && (
@@ -170,6 +178,8 @@ export default function CheckoutForm(props: {
                 setMethod("cash");
                 setTransactionId(draft.transactionId);
                 setResult(null);
+                setPriceChangePending(priceChanged ? `harga berubah dari Rp ${draft.totalAtDraft.toLocaleString("id-ID")} menjadi Rp ${currentEstimate.toLocaleString("id-ID")}` : null);
+                setPriceChangeAcknowledged(false);
                 const issues = [
                   !branchAvailable ? "akses cabang berubah" : "",
                   !deviceAvailable ? "perangkat tidak tersedia" : "",
