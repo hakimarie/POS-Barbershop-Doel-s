@@ -145,18 +145,38 @@ export default function CheckoutForm(props: {
             </div>
             <div className="offline-draft-actions">
               <button type="button" className="secondary-button" onClick={() => {
-                setBranchId(draft.branchId);
-                setDeviceId(draft.deviceId);
-                setShiftId(draft.shiftId);
-                setServiceId(draft.serviceId);
-                setBarberId(draft.barberId);
+                const branchAvailable = props.branches.some((item) => item.id === draft.branchId);
+                const deviceAvailable = props.devices.some((item) => item.id === draft.deviceId && item.branch_id === draft.branchId);
+                const shiftAvailable = props.shifts.some((item) => item.id === draft.shiftId && item.branch_id === draft.branchId && item.device_id === draft.deviceId && item.status === "open");
+                const serviceAvailable = props.services.some((item) => item.id === draft.serviceId);
+                const priceAvailable = props.prices.some((item) => item.branch_id === draft.branchId && item.service_id === draft.serviceId && Date.parse(item.effective_from) <= Date.now());
+                const barberAvailable = props.barbers.some((item) => item.id === draft.barberId) && props.assignments.some((item) => item.branch_id === draft.branchId && item.barber_id === draft.barberId);
+                const selectedBranch = branchAvailable ? draft.branchId : (props.branches[0]?.id ?? "");
+                const selectedDevice = deviceAvailable && branchAvailable ? draft.deviceId : "";
+                const selectedShift = shiftAvailable && deviceAvailable && branchAvailable ? draft.shiftId : "";
+                const selectedService = serviceAvailable && priceAvailable && branchAvailable ? draft.serviceId : "";
+                const selectedBarber = barberAvailable && branchAvailable ? draft.barberId : "";
+                setBranchId(selectedBranch);
+                setDeviceId(selectedDevice);
+                setShiftId(selectedShift);
+                setServiceId(selectedService);
+                setBarberId(selectedBarber);
                 setQuantity(draft.quantity);
                 setMethod("cash");
                 setTransactionId(draft.transactionId);
                 setResult(null);
-                setOfflineNotice("Draft dimuat. Pastikan perangkat dan shift masih aktif serta harga terbaru sesuai sebelum mengirim.");
+                const issues = [
+                  !branchAvailable ? "akses cabang berubah" : "",
+                  !deviceAvailable ? "perangkat tidak tersedia" : "",
+                  !shiftAvailable ? "shift lama tidak lagi terbuka; pilih shift aktif" : "",
+                  !serviceAvailable || !priceAvailable ? "layanan/harga perlu dipilih ulang" : "",
+                  !barberAvailable ? "penugasan barber perlu dipilih ulang" : "",
+                ].filter(Boolean);
+                setOfflineNotice(issues.length
+                  ? `Draft dimuat dengan peringatan: ${issues.join("; ")}. Periksa pilihan dan harga terbaru. ID transaksi asli dipertahankan untuk mencegah transaksi ganda.`
+                  : "Draft dimuat. Data cabang, perangkat, shift, layanan, harga, dan penugasan tersedia saat ini. Periksa total terbaru sebelum mengirim.");
                 window.scrollTo({ top: 0, behavior: "smooth" });
-              }}>Muat draft</button>
+              }}>Muat & periksa</button>
               <button type="button" className="draft-remove" onClick={() => {
                 void saveDrafts(offlineDrafts.filter((item) => item.transactionId !== draft.transactionId)).catch(() => undefined);
               }} aria-label="Hapus draft">Hapus</button>
