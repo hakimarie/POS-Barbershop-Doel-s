@@ -160,21 +160,20 @@ function OnboardingChecklist({ steps }: { steps: SetupStep[] }) {
   return (
     <section className="onboarding-panel section-block" aria-labelledby="onboarding-title">
       <div className="onboarding-header">
-        <div><p className="eyebrow">PANDUAN PENGGUNA BARU</p><h2 id="onboarding-title">Siapkan POS barbershop</h2><p>Ikuti langkah inti sebelum sistem dipakai operasional di seluruh cabang.</p></div>
-        <div className="onboarding-progress"><strong>{completed}/{steps.length}</strong><span>langkah selesai</span></div>
+        <div><p className="eyebrow">PANDUAN SETUP</p><h2 id="onboarding-title">Kesiapan POS</h2></div>
+        <div className="onboarding-progress"><strong>{completed}/{steps.length}</strong><span>selesai</span></div>
       </div>
       <div className="progress-track" role="progressbar" aria-label="Progres persiapan POS" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={completed}><span style={{ width: `${percent}%` }} /></div>
       <div className="onboarding-steps">
         {steps.map((step) => (
           <article className={`onboarding-step ${step.complete === true ? "is-complete" : step.complete === null ? "is-unknown" : ""}`} key={step.number}>
             <span className="onboarding-step-number">{step.complete === true ? "✓" : step.number}</span>
-            <div className="onboarding-step-copy"><h3>{step.title}</h3><p>{step.description}</p></div>
-            <span className={`onboarding-status ${step.complete === true ? "status-done" : step.complete === null ? "status-unknown" : "status-pending"}`}>{step.complete === true ? "Selesai" : step.complete === null ? "Belum diverifikasi" : "Perlu disiapkan"}</span>
-            <Link className="onboarding-link" href={step.href}>{step.complete === true ? "Buka" : "Lanjut"} <span aria-hidden="true">↗</span></Link>
+            <h3 className="onboarding-step-title">{step.title}</h3>
+            <span className={`onboarding-status ${step.complete === true ? "status-done" : step.complete === null ? "status-unknown" : "status-pending"}`}>{step.complete === true ? "Selesai" : step.complete === null ? "Cek status" : "Belum"}</span>
+            <Link className="onboarding-link" href={step.href} aria-label={`${step.title}: buka modul`}>↗</Link>
           </article>
         ))}
       </div>
-      <p className="onboarding-footnote">Status berasal dari data yang dapat dibaca dashboard. Offline sync dan QRIS tidak ditandai selesai hanya karena konfigurasi dasar tersedia.</p>
     </section>
   );
 }
