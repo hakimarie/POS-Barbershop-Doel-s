@@ -149,7 +149,12 @@ export default function CheckoutForm(props: {
                 const deviceAvailable = props.devices.some((item) => item.id === draft.deviceId && item.branch_id === draft.branchId);
                 const shiftAvailable = props.shifts.some((item) => item.id === draft.shiftId && item.branch_id === draft.branchId && item.device_id === draft.deviceId && item.status === "open");
                 const serviceAvailable = props.services.some((item) => item.id === draft.serviceId);
-                const priceAvailable = props.prices.some((item) => item.branch_id === draft.branchId && item.service_id === draft.serviceId && Date.parse(item.effective_from) <= Date.now());
+                const currentPrice = props.prices
+                  .filter((item) => item.branch_id === draft.branchId && item.service_id === draft.serviceId && Date.parse(item.effective_from) <= Date.now())
+                  .sort((a, b) => Date.parse(b.effective_from) - Date.parse(a.effective_from))[0];
+                const priceAvailable = Boolean(currentPrice);
+                const currentEstimate = (currentPrice?.price_amount ?? 0) * Number(draft.quantity || 0);
+                const priceChanged = priceAvailable && currentEstimate !== draft.totalAtDraft;
                 const barberAvailable = props.barbers.some((item) => item.id === draft.barberId) && props.assignments.some((item) => item.branch_id === draft.branchId && item.barber_id === draft.barberId);
                 const selectedBranch = branchAvailable ? draft.branchId : (props.branches[0]?.id ?? "");
                 const selectedDevice = deviceAvailable && branchAvailable ? draft.deviceId : "";
@@ -170,6 +175,7 @@ export default function CheckoutForm(props: {
                   !deviceAvailable ? "perangkat tidak tersedia" : "",
                   !shiftAvailable ? "shift lama tidak lagi terbuka; pilih shift aktif" : "",
                   !serviceAvailable || !priceAvailable ? "layanan/harga perlu dipilih ulang" : "",
+                  priceChanged ? `harga berubah dari estimasi Rp ${draft.totalAtDraft.toLocaleString("id-ID")} menjadi Rp ${currentEstimate.toLocaleString("id-ID")}` : "",
                   !barberAvailable ? "penugasan barber perlu dipilih ulang" : "",
                 ].filter(Boolean);
                 setOfflineNotice(issues.length
