@@ -26,9 +26,10 @@ export default async function BranchesPage() {
         <Link className="nav-item" href="/">▦ Dashboard</Link>
         <Link className="nav-item" href="/kasir">＋ Kasir</Link>
         <Link className="nav-item" href="/layanan">◇ Layanan & harga</Link>
-        <Link className="nav-item" href="/barber">♙ Barber & penugasan</Link>
+        <Link className="nav-item" href="/barber">♙ Manajemen kapster</Link>
         <Link className="nav-item active" href="/cabang" aria-current="page">⌖ Cabang</Link>
       </nav>
+      <div className="sidebar-settings">{canManage ? <Link className="nav-item" href="/pengaturan"><span>⚙</span> Pengaturan</Link> : null}</div>
       <div className="sidebar-bottom"><span className="status-dot" /><div><strong>{profile.full_name}</strong><small>{profile.role}</small></div></div>
     </aside>
     <section className="main-panel">

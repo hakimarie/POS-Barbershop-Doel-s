@@ -100,7 +100,7 @@ async function getSetupSteps(organizationId: string, branches: WorkspaceBranch[]
     return [
       { number: "01", title: "Cabang & perangkat", description: `${branches.length} cabang aktif · ${devices.length} perangkat aktif. Target awal: 10 cabang dan perangkat terdaftar.`, href: "/cabang", complete: branches.length >= 10 && branches.every((item) => devices.some((device) => device.branch_id === item.id)) },
       { number: "02", title: "Layanan & harga", description: "Setiap layanan aktif perlu memiliki harga efektif di seluruh cabang aktif.", href: "/layanan", complete: servicesError || pricesError ? null : priceCoverageComplete },
-      { number: "03", title: "Barber & penugasan", description: "Pastikan barber aktif ditugaskan ke setiap cabang yang beroperasi.", href: "/barber", complete: barbersError || assignmentsError ? null : barberCoverageComplete },
+      { number: "03", title: "Manajemen kapster", description: "Pastikan barber aktif ditugaskan ke setiap cabang yang beroperasi.", href: "/barber", complete: barbersError || assignmentsError ? null : barberCoverageComplete },
       { number: "04", title: "Shift kasir", description: "Buka shift sebelum mulai mencatat transaksi.", href: "/kasir", complete: activeShifts.some((shift) => shift.status === "open") },
       { number: "05", title: "Transaksi pertama", description: "Checklist selesai setelah transaksi berstatus lunas tercatat.", href: "/kasir", complete: salesError ? null : (paidSales ?? 0) > 0 },
     ];
@@ -108,7 +108,7 @@ async function getSetupSteps(organizationId: string, branches: WorkspaceBranch[]
     return [
       { number: "01", title: "Cabang & perangkat", description: "Status setup belum dapat diverifikasi dari database.", href: "/cabang", complete: null },
       { number: "02", title: "Layanan & harga", description: "Status setup belum dapat diverifikasi dari database.", href: "/layanan", complete: null },
-      { number: "03", title: "Barber & penugasan", description: "Status setup belum dapat diverifikasi dari database.", href: "/barber", complete: null },
+      { number: "03", title: "Manajemen kapster", description: "Status setup belum dapat diverifikasi dari database.", href: "/barber", complete: null },
       { number: "04", title: "Shift kasir", description: "Status setup belum dapat diverifikasi dari database.", href: "/kasir", complete: null },
       { number: "05", title: "Transaksi pertama", description: "Status setup belum dapat diverifikasi dari database.", href: "/kasir", complete: null },
     ];
@@ -196,9 +196,10 @@ export default async function HomePage() {
           <a className="nav-item active" href="#dashboard"><span>▦</span> Dashboard</a>
           <Link className="nav-item" href="/kasir"><span>＋</span> Kasir</Link>
           <a className="nav-item" href="#shift"><span>◷</span> Shift kasir</a>
-          {isCentralRole ? <><Link className="nav-item" href="/barber"><span>♙</span> Barber & penugasan</Link><Link className="nav-item" href="/layanan"><span>◇</span> Layanan & harga</Link><Link className="nav-item" href="/cabang"><span>⌖</span> Pengaturan cabang</Link><a className="nav-item" href="#laporan"><span>▤</span> Laporan</a></> : null}
+          {isCentralRole ? <><Link className="nav-item" href="/barber"><span>♙</span> Manajemen kapster</Link><Link className="nav-item" href="/layanan"><span>◇</span> Layanan & harga</Link><Link className="nav-item" href="/cabang"><span>⌖</span> Pengaturan cabang</Link><a className="nav-item" href="#laporan"><span>▤</span> Laporan</a></> : null}
         </nav>
-        <div className="sidebar-bottom">
+        <div className="sidebar-settings">{isCentralRole ? <Link className="nav-item" href="/pengaturan"><span>⚙</span> Pengaturan</Link> : null}</div>
+      <div className="sidebar-bottom">
           <span className="status-dot" />
           <div><strong>{workspace.profile?.full_name ?? "Sesi terautentikasi"}</strong><small>{workspace.profile ? workspace.profile.role : "Profil POS belum terhubung"}</small></div>
         </div>

@@ -46,11 +46,12 @@ export default async function ServicesPage() {
         <nav className="nav-list" aria-label="Navigasi utama">
           <Link className="nav-item" href="/"><span>▦</span> Dashboard</Link>
           <Link className="nav-item" href="/layanan" aria-current="page"><span>◇</span> Layanan & harga</Link>
-          <Link className="nav-item" href="/barber"><span>♙</span> Barber & penugasan</Link>
+          <Link className="nav-item" href="/barber"><span>♙</span> Manajemen kapster</Link>
           <Link className="nav-item" href="/cabang"><span>⌖</span> Pengaturan cabang</Link>
           <Link className="nav-item" href="/#shift"><span>◷</span> Shift kasir</Link>
         </nav>
-        <div className="sidebar-bottom"><span className="status-dot" /><div><strong>{profile.full_name}</strong><small>{profile.role}</small></div></div>
+        <div className="sidebar-settings">{canManage ? <Link className="nav-item" href="/pengaturan"><span>⚙</span> Pengaturan</Link> : null}</div>
+      <div className="sidebar-bottom"><span className="status-dot" /><div><strong>{profile.full_name}</strong><small>{profile.role}</small></div></div>
       </aside>
       <section className="main-panel">
         <header className="topbar"><div className="breadcrumbs"><Link href="/">Workspace</Link><span>/</span><strong>Layanan & harga</strong></div><div className="topbar-right"><span className="offline-pill"><i /> Master data</span><div className="avatar">DO</div><SignOutButton /></div></header>

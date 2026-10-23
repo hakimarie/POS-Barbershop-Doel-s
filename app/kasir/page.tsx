@@ -74,9 +74,10 @@ export default async function CashierPage() {
         <Link className="nav-item" href="/">▦ Dashboard</Link>
         <Link className="nav-item active" href="/kasir" aria-current="page">＋ Kasir</Link>
         <Link className="nav-item" href="/layanan">◇ Layanan & harga</Link>
-        <Link className="nav-item" href="/barber">♙ Barber & penugasan</Link>
+        <Link className="nav-item" href="/barber">♙ Manajemen kapster</Link>
         <Link className="nav-item" href="/#shift">◷ Shift kasir</Link>
       </nav>
+      <div className="sidebar-settings">{(profile.role === "owner" || profile.role === "admin") ? <Link className="nav-item" href="/pengaturan"><span>⚙</span> Pengaturan</Link> : null}</div>
       <div className="sidebar-bottom"><span className="status-dot" /><div><strong>{profile.full_name}</strong><small>{profile.role}</small></div></div>
     </aside>
     <section className="main-panel">
