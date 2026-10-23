@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SignOutButton from "@/components/auth/sign-out-button";
 import BranchNameForm from "@/components/branches/branch-name-form";
+import CreateBranchForm from "@/components/branches/create-branch-form";
 import { createClient } from "@/lib/supabase/server";
 
 type Branch = { id: string; code: string; name: string; is_active: boolean };
@@ -35,7 +36,7 @@ export default async function BranchesPage() {
       <div className="content">
         <div className="welcome-row"><div><p className="eyebrow">DOEL&apos;S BARBERSHOP · MASTER DATA</p><h1>Pengaturan cabang</h1><p className="subtitle">Tetapkan nama outlet tanpa mengganti kode internal cabang.</p></div><Link className="secondary-button" href="/">← Kembali ke dashboard</Link></div>
         {error ? <div className="notice"><div className="notice-icon">!</div><div><strong>Data cabang belum dapat dimuat</strong><p>Periksa koneksi Supabase dan policy RLS.</p></div></div> : null}
-        {!error && canManage ? <BranchNameForm branches={branches.filter((branch) => branch.is_active)} /> : null}
+        {!error && canManage ? <><CreateBranchForm /><BranchNameForm branches={branches.filter((branch) => branch.is_active)} /></> : null}
         {!canManage ? <div className="notice"><div className="notice-icon">i</div><div><strong>Mode lihat saja</strong><p>Hanya owner/admin yang dapat mengganti nama cabang.</p></div></div> : null}
         <section className="section-block">
           <div className="section-heading"><div><h2>Daftar cabang</h2><p>ID dan kode internal tetap stabil walaupun nama outlet berubah.</p></div><span className="section-count">{branches.length} CABANG</span></div>
