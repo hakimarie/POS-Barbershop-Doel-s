@@ -68,3 +68,49 @@ export async function createBranch(formData: FormData): Promise<RenameBranchResu
     return { ok: false, message: "Tidak dapat menghubungi Supabase. Periksa koneksi dan konfigurasi." };
   }
 }
+
+
+export async function updateOrganizationProfile(formData: FormData): Promise<RenameBranchResult> {
+  const name = String(formData.get("business_name") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const phone = String(formData.get("contact_phone") ?? "").trim();
+  const logoUrl = String(formData.get("receipt_logo_url") ?? "").trim();
+  const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+  const operatingHours: Record<string, { closed: boolean; open?: string; close?: string }> = {};
+
+  if (!name || name.length > 120) return { ok: false, message: "Nama usaha wajib diisi, maksimal 120 karakter." };
+  if (address.length > 300 || phone.length > 40 || logoUrl.length > 2048) return { ok: false, message: "Alamat, nomor kontak, atau URL logo melebihi batas karakter." };
+  if (logoUrl && !/^https:\/\/[^\s]+$/i.test(logoUrl)) return { ok: false, message: "URL logo struk harus menggunakan HTTPS." };
+
+  for (const day of days) {
+    const closed = formData.get(day + "_closed") === "on";
+    const open = String(formData.get(day + "_open") ?? "");
+    const close = String(formData.get(day + "_close") ?? "");
+    if (!closed && (!/^([01]\d|2[0-3]):[0-5]\d$/.test(open) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(close) || open >= close)) {
+      return { ok: false, message: "Jam buka/tutup belum valid. Pilih jam yang benar atau tandai hari sebagai tutup." };
+    }
+    operatingHours[day] = closed ? { closed: true } : { closed: false, open, close };
+  }
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { ok: false, message: "Sesi tidak valid. Silakan login kembali." };
+    const { error } = await supabase.rpc("kt_update_organization_profile", {
+      p_name: name, p_address: address || null, p_contact_phone: phone || null,
+      p_receipt_logo_url: logoUrl || null, p_operating_hours: operatingHours,
+    });
+    if (error) {
+      if (error.code === "42501") return { ok: false, message: "Akses ditolak. Hanya owner/admin aktif yang dapat mengubah profil usaha." };
+      if (error.code === "22023") return { ok: false, message: error.message };
+      if (["PGRST202", "42883", "42703"].includes(error.code ?? "")) return { ok: false, message: "Pengaturan profil belum aktif di database. Terapkan migration 017 di Supabase staging, lalu coba lagi." };
+      return { ok: false, message: `Profil belum tersimpan (database ${error.code ?? "error"}). Periksa migration 017.` };
+    }
+    revalidatePath("/pengaturan");
+    revalidatePath("/pengaturan/profil");
+    revalidatePath("/");
+    return { ok: true, message: "Profil barbershop berhasil disimpan." };
+  } catch {
+    return { ok: false, message: "Tidak dapat menghubungi Supabase. Periksa koneksi dan konfigurasi." };
+  }
+}
