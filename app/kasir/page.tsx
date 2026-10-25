@@ -22,7 +22,7 @@ export default async function CashierPage() {
   }
 
   const now = new Date().toISOString();
-  const [{data: branchRows},{data: deviceRows},{data: shiftRows},{data: serviceRows},{data: priceRows},{data: barberRows},{data: assignmentRows}] = await Promise.all([
+  const [{data: branchRows},{data: deviceRows},{data: shiftRows},{data: serviceRows},{data: priceRows},{data: barberRows},{data: assignmentRows},{data: organization}] = await Promise.all([
     supabase.from("branches").select("id,code,name").eq("organization_id",profile.organization_id).eq("is_active",true).order("code"),
     supabase.from("devices").select("id,branch_id,device_code,device_name").eq("organization_id",profile.organization_id).eq("is_active",true).order("device_code"),
     supabase.from("cash_shifts").select("id,branch_id,device_id,status,opened_at").eq("organization_id",profile.organization_id).eq("status","open").order("opened_at",{ascending:false}),
@@ -30,6 +30,7 @@ export default async function CashierPage() {
     supabase.from("branch_service_prices").select("branch_id,service_id,price_amount,effective_from").eq("organization_id",profile.organization_id).is("effective_to",null).lte("effective_from",now),
     supabase.from("barbers").select("id,barber_code,full_name,is_active").eq("organization_id",profile.organization_id).eq("is_active",true).order("full_name"),
     supabase.from("barber_branch_assignments").select("branch_id,barber_id,effective_from,effective_to").eq("organization_id",profile.organization_id).lte("effective_from",now),
+    supabase.from("organizations").select("name,address,contact_phone,receipt_logo_url,receipt_footer,receipt_show_cashier,receipt_show_barber,receipt_show_branch_address").eq("id",profile.organization_id).maybeSingle(),
   ]);
 
   let allowedBranchIds: Set<string> | null = null;
@@ -85,7 +86,7 @@ export default async function CashierPage() {
       <div className="content">
         <div className="welcome-row"><div><p className="eyebrow">DOEL&apos;S BARBERSHOP · POINT OF SALE</p><h1>Kasir baru</h1><p className="subtitle">Buat transaksi untuk layanan barber dengan harga efektif per cabang.</p></div><Link className="secondary-button" href="/">← Dashboard</Link></div>
         <div className="notice"><div className="notice-icon">i</div><div><strong>Uji di staging terlebih dahulu</strong><p>Transaksi tunai dicatat lunas. QRIS hanya berstatus menunggu konfirmasi. Komisi tanpa konfigurasi aktif ditandai perlu review dan tidak dihitung sebagai komisi final.</p></div></div>
-        {operationalDataComplete ? <CheckoutForm branches={branches} devices={devices} shifts={shifts} services={services} prices={prices} barbers={barbers} assignments={assignments} storageKey={`kt-pos-offline-drafts:${profile.organization_id}:${user.id}`} /> :
+        {operationalDataComplete ? <CheckoutForm branches={branches} devices={devices} shifts={shifts} services={services} prices={prices} barbers={barbers} assignments={assignments} storageKey={`kt-pos-offline-drafts:${profile.organization_id}:${user.id}`} cashierName={profile.full_name} receiptSettings={{ businessName: organization?.name ?? "Doel’s Barbershop", address: organization?.address ?? "", phone: organization?.contact_phone ?? "", logoUrl: organization?.receipt_logo_url ?? "", footer: organization?.receipt_footer ?? "Terima kasih telah berkunjung!", showCashier: organization?.receipt_show_cashier ?? true, showBarber: organization?.receipt_show_barber ?? true, showAddress: organization?.receipt_show_branch_address ?? true }} /> :
           <div className="notice"><div className="notice-icon">!</div><div><strong>Data operasional belum lengkap</strong><p>Berikut pemeriksaan data yang dibutuhkan halaman kasir. Angka menunjukkan jumlah data aktif/efektif yang berhasil dibaca untuk organisasi ini.</p>
             <ul className="operational-checklist">{missingRequirements.map((item) => <li key={item.label}><span aria-hidden="true">{item.ok ? "✓" : "!"}</span><strong>{item.label}</strong><span>{item.count} data</span><em>{item.ok ? "Tersedia" : "Perlu dilengkapi"}</em></li>)}</ul>
             <p>Lengkapi item yang bertanda “Perlu dilengkapi”, lalu muat ulang halaman. Untuk penugasan barber, pastikan penugasan masih berlaku saat ini dan mengarah ke cabang yang dipilih.</p>
