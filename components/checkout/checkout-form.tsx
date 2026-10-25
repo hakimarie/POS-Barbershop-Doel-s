@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition, type FormEvent } from "react";
+import Image from "next/image";
 import { checkoutSale, type CheckoutResult } from "@/app/actions/checkout";
 import { loadOfflineDrafts, saveOfflineDrafts, type OfflineDraftRecord } from "@/lib/offline-drafts";
 
@@ -12,10 +13,12 @@ type Price = { branch_id: string; service_id: string; price_amount: number; effe
 type Barber = { id: string; barber_code: string; full_name: string };
 type Assignment = { branch_id: string; barber_id: string };
 type OfflineDraft = OfflineDraftRecord;
+type ReceiptSnapshot = { branchName: string; branchCode: string; deviceName: string; serviceName: string; barberName: string; quantity: number; paymentMethod: string; issuedAt: string };
+type ReceiptSettings = { businessName: string; address: string; phone: string; logoUrl: string; footer: string; showCashier: boolean; showBarber: boolean; showAddress: boolean };
 
 export default function CheckoutForm(props: {
   branches: Branch[]; devices: Device[]; shifts: Shift[]; services: Service[];
-  prices: Price[]; barbers: Barber[]; assignments: Assignment[]; storageKey: string;
+  prices: Price[]; barbers: Barber[]; assignments: Assignment[]; storageKey: string; cashierName: string; receiptSettings: ReceiptSettings;
 }) {
   const [branchId, setBranchId] = useState(props.branches[0]?.id ?? "");
   const [deviceId, setDeviceId] = useState("");
@@ -26,6 +29,7 @@ export default function CheckoutForm(props: {
   const [method, setMethod] = useState("cash");
   const [transactionId, setTransactionId] = useState(() => crypto.randomUUID());
   const [result, setResult] = useState<CheckoutResult | null>(null);
+  const [receiptSnapshot, setReceiptSnapshot] = useState<ReceiptSnapshot | null>(null);
   const [offlineDrafts, setOfflineDrafts] = useState<OfflineDraft[]>([]);
   const [isOnline, setIsOnline] = useState(true);
   const [offlineNotice, setOfflineNotice] = useState("");
@@ -70,7 +74,7 @@ export default function CheckoutForm(props: {
   const total = (selectedPrice?.price_amount ?? 0) * Number(quantity || 0);
 
   function changeBranch(value: string) {
-    setBranchId(value); setDeviceId(""); setShiftId(""); setServiceId(""); setBarberId(""); setResult(null);
+    setBranchId(value); setDeviceId(""); setShiftId(""); setServiceId(""); setBarberId(""); setResult(null); setReceiptSnapshot(null);
     setPriceChangePending(null); setPriceChangeAcknowledged(false);
   }
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -101,6 +105,9 @@ export default function CheckoutForm(props: {
     startTransition(async () => {
       const response = await checkoutSale(data);
       setResult(response);
+      if (response.ok) {
+        setReceiptSnapshot({ branchName: props.branches.find((item) => item.id === branchId)?.name ?? "Cabang", branchCode: props.branches.find((item) => item.id === branchId)?.code ?? "", deviceName: props.devices.find((item) => item.id === deviceId)?.device_name ?? "Kasir", serviceName: props.services.find((item) => item.id === serviceId)?.name ?? "Layanan", barberName: props.barbers.find((item) => item.id === barberId)?.full_name ?? "Barber", quantity: Number(quantity), paymentMethod: method, issuedAt: new Date().toISOString() });
+      }
       if (response.ok) {
         void saveDrafts(offlineDrafts.filter((item) => item.transactionId !== transactionId)).catch(() => undefined);
         setTransactionId(crypto.randomUUID()); setQuantity("1"); setServiceId(""); setBarberId("");
@@ -204,8 +211,30 @@ export default function CheckoutForm(props: {
     {!shifts.length && <p className="architecture-footnote">Belum ada shift terbuka untuk perangkat/cabang pilihan. Buka shift terlebih dahulu di dashboard.</p>}
     {result && <div className={result.ok ? "notice checkout-result" : "notice checkout-error"} role="status">
       <div className="notice-icon">{result.ok ? "✓" : "!"}</div><div><strong>{result.ok ? "Hasil checkout" : "Transaksi gagal"}</strong><p>{result.message}</p>
-      {result.ok && <p><b>Struk:</b> {result.receipt}<br/><b>Total:</b> Rp {(result.total ?? 0).toLocaleString("id-ID")}<br/><b>Komisi:</b> Rp {(result.commission ?? 0).toLocaleString("id-ID")}{result.reviewRequired ? " — perlu review penetapan komisi" : ""}<br/><b>Status pembayaran:</b> {result.paymentStatus === "paid" ? "Lunas" : "Menunggu konfirmasi"}</p>}</div>
+      {result.ok && <p><b>Struk:</b> {result.receipt}<br/><b>Total:</b> Rp {(result.total ?? 0).toLocaleString("id-ID")}<br/><b>Komisi:</b> Rp {(result.commission ?? 0).toLocaleString("id-ID")}{result.reviewRequired ? " — perlu review penetapan komisi" : ""}<br/><b>Status pembayaran:</b> {result.paymentStatus === "paid" ? "Lunas" : "Menunggu konfirmasi"}</p>}
+      {result.ok && receiptSnapshot && <button type="button" className="secondary-button checkout-print-button" onClick={() => window.print()}>Cetak struk</button>}</div>
     </div>}
+    {result?.ok && receiptSnapshot && <section className="checkout-print-receipt" aria-label="Struk transaksi untuk dicetak">
+      {props.receiptSettings.logoUrl ? <Image src={props.receiptSettings.logoUrl} alt="Logo usaha" width={150} height={80} unoptimized className="checkout-receipt-logo" /> : null}
+      <h1>{props.receiptSettings.businessName || "Barbershop"}</h1>
+      {props.receiptSettings.showAddress && props.receiptSettings.address ? <p className="checkout-receipt-center">{props.receiptSettings.address}</p> : null}
+      {props.receiptSettings.phone ? <p className="checkout-receipt-center">{props.receiptSettings.phone}</p> : null}
+      <hr />
+      <p>No. struk: <strong>{result.receipt}</strong></p>
+      <p>Tanggal: {new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(new Date(receiptSnapshot.issuedAt))}</p>
+      <p>Cabang: {receiptSnapshot.branchCode} — {receiptSnapshot.branchName}</p>
+      <p>Kasir: {receiptSnapshot.deviceName}</p>
+      <hr />
+      <div className="checkout-receipt-row"><span>{receiptSnapshot.serviceName} × {receiptSnapshot.quantity}</span><span>Rp {(result.total ?? 0).toLocaleString("id-ID")}</span></div>
+      <div className="checkout-receipt-row"><span>Total</span><strong>Rp {(result.total ?? 0).toLocaleString("id-ID")}</strong></div>
+      <p>Metode: {receiptSnapshot.paymentMethod === "cash" ? "Tunai" : "QRIS"}</p>
+      <p>Status: <strong>{result.paymentStatus === "paid" ? "LUNAS" : "MENUNGGU KONFIRMASI QRIS"}</strong></p>
+      {props.receiptSettings.showBarber ? <p>Kapster: {receiptSnapshot.barberName}</p> : null}
+      {props.receiptSettings.showCashier ? <p>Petugas kasir: {props.cashierName}</p> : null}
+      <hr />
+      <p className="checkout-receipt-footer">{props.receiptSettings.footer || "Terima kasih telah berkunjung!"}</p>
+      {result.paymentStatus !== "paid" ? <p className="checkout-receipt-warning">Pembayaran belum terkonfirmasi. Simpan struk ini sebagai bukti transaksi menunggu, bukan bukti lunas.</p> : null}
+    </section>}
     <p className="architecture-footnote">Jangan menandai QRIS lunas secara manual. Integrasi verifikasi QRIS dan mode offline penuh belum termasuk tahap ini.</p>
   </form>;
 }
