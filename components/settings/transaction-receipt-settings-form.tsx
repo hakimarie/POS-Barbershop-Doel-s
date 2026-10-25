@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
+import Image from "next/image";
 import { updateTransactionReceiptSettings } from "@/app/actions/branches";
 
 type Props = {
@@ -57,7 +58,7 @@ export default function TransactionReceiptSettingsForm(props: Props) {
     <aside className="receipt-preview-card">
       <div className="receipt-preview-heading"><div><p className="eyebrow">LIVE PREVIEW</p><h2>Pratinjau struk</h2></div><span className="receipt-preview-status">Contoh</span></div>
       <div className="receipt-paper">
-        {props.logoUrl ? <img className="receipt-preview-logo" src={props.logoUrl} alt="Logo usaha" /> : <div className="receipt-preview-mark">KT</div>}
+        {props.logoUrl ? <Image className="receipt-preview-logo" src={props.logoUrl} alt="Logo usaha" width={152} height={96} unoptimized /> : <div className="receipt-preview-mark">KT</div>}
         <h3>{props.businessName || "Nama Barbershop"}</h3>
         {showAddress && props.address ? <p>{props.address}</p> : null}
         {props.phone ? <p>{props.phone}</p> : null}
