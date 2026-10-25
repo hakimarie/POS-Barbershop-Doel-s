@@ -301,3 +301,42 @@
 .profile-form-message.success{color:#166534;background:#f0fdf4;border:1px solid #bbf7d0}
 .profile-form-message.error{color:#991b1b;background:#fef2f2;border:1px solid #fecaca}
 @media(max-width:700px){.profile-form-section{padding:13px}.profile-form-grid{grid-template-columns:minmax(0,1fr);gap:12px}.profile-field-wide{grid-column:auto}.operating-hours-row{grid-template-columns:minmax(58px,.8fr) minmax(0,1fr) minmax(0,1fr);gap:7px}.hours-closed{grid-column:2/-1;justify-self:start;padding-left:2px}.hours-time-field{flex-direction:column;align-items:stretch;gap:3px}.profile-form-footer{align-items:stretch;flex-direction:column}.profile-form-footer button{width:100%}}
+
+/* Transaction and receipt settings */
+.receipt-settings-intro{display:flex;align-items:flex-start;gap:13px;padding:16px 18px;margin:0 0 20px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:12px;color:#1e3a8a}
+.receipt-intro-icon{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:10px;background:#dbeafe;font-size:20px}
+.receipt-settings-intro strong{display:block;font-size:13px;margin:1px 0 5px}
+.receipt-settings-intro p{margin:0;color:#1e40af;font-size:11px;line-height:1.6}
+.receipt-settings-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:20px;align-items:start}
+.receipt-settings-form{min-width:0}
+.receipt-toggle-list{display:grid;gap:0;margin-top:18px;border:1px solid var(--border,#e2e8f0);border-radius:10px;overflow:hidden}
+.receipt-toggle{display:flex;align-items:flex-start;gap:12px;padding:14px 15px;cursor:pointer;background:#fff}
+.receipt-toggle+.receipt-toggle{border-top:1px solid var(--border,#e2e8f0)}
+.receipt-toggle input{margin:3px 0 0;accent-color:#2563eb;width:16px;height:16px;flex:0 0 auto}
+.receipt-toggle span{display:grid;gap:4px}
+.receipt-toggle strong{font-size:12px;color:var(--ink,#0f172a)}
+.receipt-toggle small{font-size:11px;line-height:1.5;color:var(--muted,#64748b)}
+.receipt-preview-card{position:sticky;top:18px;border:1px solid var(--border,#e2e8f0);border-radius:14px;padding:18px;background:#f8fafc;min-width:0}
+.receipt-preview-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.receipt-preview-heading .eyebrow{margin:0 0 4px;font-size:9px;letter-spacing:.12em;color:#64748b;font-weight:700}
+.receipt-preview-heading h2{margin:0;font-size:16px;color:#0f172a}
+.receipt-preview-status{border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px;font-size:10px;color:#475569;background:#fff}
+.receipt-paper{max-width:320px;margin:0 auto;padding:24px 20px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:4px;box-shadow:0 5px 18px #0f172a0d;color:#1e293b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;overflow-wrap:anywhere}
+.receipt-preview-mark{display:grid;place-items:center;width:35px;height:35px;margin:0 auto 10px;border-radius:50%;background:#eff6ff;color:#2563eb;font-weight:800;font-size:12px}
+.receipt-preview-logo{display:block;max-width:76px;max-height:48px;object-fit:contain;margin:0 auto 10px}
+.receipt-paper h3{text-align:center;font-size:13px;line-height:1.4;margin:0 0 5px;color:#0f172a}
+.receipt-paper>p:not(.receipt-preview-disclaimer){text-align:center;line-height:1.5;margin:3px 0;color:#475569}
+.receipt-dash{border-top:1px dashed #cbd5e1;margin:13px 0}
+.receipt-meta,.receipt-line,.receipt-total{display:flex;justify-content:space-between;gap:10px;line-height:1.6}
+.receipt-meta{margin:4px 0;color:#64748b}
+.receipt-meta strong{color:#334155;text-align:right;font-weight:600}
+.receipt-line{margin:5px 0}
+.receipt-line span:last-child{text-align:right;white-space:nowrap}
+.receipt-total{font-size:11px;font-weight:700;color:#0f172a}
+.receipt-total strong{white-space:nowrap}
+.receipt-paper .receipt-preview-payment,.receipt-paper .receipt-preview-detail{font-size:10px;text-align:left;margin:4px 0}
+.receipt-paper .receipt-footer-copy{text-align:center;white-space:pre-wrap;line-height:1.6;font-size:10px;color:#334155}
+.receipt-paper .receipt-preview-disclaimer{margin:15px 0 0;padding-top:9px;border-top:1px dashed #e2e8f0;text-align:center;font-family:ui-sans-serif,system-ui,sans-serif;font-size:8px;color:#94a3b8;line-height:1.4}
+.receipt-preview-note{font-size:10px;line-height:1.6;color:#64748b;margin:14px 2px 0}
+@media(max-width:980px){.receipt-settings-layout{grid-template-columns:minmax(0,1fr)}.receipt-preview-card{position:static}.receipt-paper{width:100%}}
+@media(max-width:700px){.receipt-settings-intro{padding:13px}.receipt-settings-layout{gap:14px}.receipt-preview-card{padding:13px}.receipt-paper{padding:20px 16px}.receipt-settings-form .profile-form-footer{align-items:stretch;flex-direction:column}.receipt-settings-form .profile-form-footer button{width:100%}}
