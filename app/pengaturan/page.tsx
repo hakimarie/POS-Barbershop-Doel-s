@@ -33,7 +33,7 @@ export default async function SettingsPage() {
       { title: "Langganan", description: "Status paket POS, masa aktif, dan informasi tagihan.", status: "Belum terhubung", icon: "◇" },
     ]},
     { title: "Penjualan dan struk", items: [
-      { title: "Transaksi & Struk", description: "Format struk, penomoran transaksi, pajak PB1, dan instruksi tambahan.", status: "Konfigurasi struk belum tersedia", icon: "▤" },
+      { title: "Transaksi & Struk", description: "Atur pesan penutup, informasi kasir/kapster, dan pratinjau struk.", status: "Pengaturan tampilan struk tersedia · pajak dan penomoran belum dikonfigurasi", href: "/pengaturan/transaksi", icon: "▤" },
       { title: "Metode Pembayaran", description: "Metode pembayaran yang diizinkan: tunai, QRIS, kartu, dan e-wallet.", status: "Tunai & QRIS menjadi target MVP", icon: "▣" },
       { title: "Tipe Kunjungan", description: "Walk-in, booking online, dan home service.", status: "Walk-in untuk MVP · booking/home service belum tersedia", icon: "↗" },
     ]},
