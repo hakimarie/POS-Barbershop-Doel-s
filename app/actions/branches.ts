@@ -114,3 +114,39 @@ export async function updateOrganizationProfile(formData: FormData): Promise<Ren
     return { ok: false, message: "Tidak dapat menghubungi Supabase. Periksa koneksi dan konfigurasi." };
   }
 }
+
+export async function updateTransactionReceiptSettings(formData: FormData): Promise<RenameBranchResult> {
+  const footer = String(formData.get("receipt_footer") ?? "").trim();
+  const showCashier = formData.get("receipt_show_cashier") === "on";
+  const showBarber = formData.get("receipt_show_barber") === "on";
+  const showAddress = formData.get("receipt_show_branch_address") === "on";
+
+  if (footer.length > 500) return { ok: false, message: "Pesan penutup maksimal 500 karakter." };
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { ok: false, message: "Sesi tidak valid. Silakan login kembali." };
+
+    const { error } = await supabase.rpc("kt_update_transaction_receipt_settings", {
+      p_receipt_footer: footer,
+      p_show_cashier: showCashier,
+      p_show_barber: showBarber,
+      p_show_branch_address: showAddress,
+    });
+    if (error) {
+      if (error.code === "42501") return { ok: false, message: "Akses ditolak. Hanya owner/admin aktif yang dapat mengubah format struk." };
+      if (error.code === "22023") return { ok: false, message: error.message };
+      if (["PGRST202", "42883", "42703"].includes(error.code ?? "")) return { ok: false, message: "Pengaturan struk belum aktif di database. Terapkan migration 018 di Supabase staging, lalu coba lagi." };
+      return { ok: false, message: `Pengaturan struk belum tersimpan (database ${error.code ?? "error"}). Periksa migration 018.` };
+    }
+
+    revalidatePath("/pengaturan");
+    revalidatePath("/pengaturan/transaksi");
+    revalidatePath("/pengaturan/profil");
+    revalidatePath("/kasir");
+    return { ok: true, message: "Pengaturan tampilan struk berhasil disimpan." };
+  } catch {
+    return { ok: false, message: "Tidak dapat menghubungi Supabase. Periksa koneksi dan konfigurasi." };
+  }
+}
