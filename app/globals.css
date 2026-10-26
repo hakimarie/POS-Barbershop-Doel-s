@@ -358,3 +358,26 @@
   .checkout-receipt-row{display:flex;justify-content:space-between;gap:4mm;margin:2mm 0}
   .checkout-receipt-warning{border:1px solid #000;padding:2mm;font-weight:700}
 }
+
+
+/* Per-barber commission configuration */
+.commission-policy-summary{display:flex;align-items:flex-start;gap:13px;padding:16px 18px;margin:0 0 20px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:12px;color:#1e3a8a}
+.commission-policy-mark{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;background:#dbeafe;color:#1d4ed8;font-size:22px;font-weight:800}
+.commission-policy-summary strong{display:block;font-size:13px;margin:1px 0 5px}
+.commission-policy-summary p{margin:0;color:#1e40af;font-size:11px;line-height:1.6}
+.commission-rate-list{display:grid;gap:12px}
+.commission-rate-row{display:grid;grid-template-columns:minmax(170px,1fr) minmax(180px,.8fr) auto;gap:16px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.commission-rate-person{display:flex;align-items:center;gap:11px;min-width:0}
+.commission-rate-avatar{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;background:#eff6ff;color:#2563eb;font-size:19px}
+.commission-rate-person strong{display:block;font-size:12px;color:#0f172a;overflow-wrap:anywhere}
+.commission-rate-person small{display:block;margin-top:4px;font-size:10px;color:#64748b}
+.commission-rate-control{display:grid;gap:6px;min-width:0}
+.commission-rate-control label{font-size:10px;font-weight:700;color:#475569}
+.commission-rate-input-wrap{display:flex;align-items:center;border:1px solid #dce1ea;border-radius:8px;background:#fff;overflow:hidden}
+.commission-rate-input-wrap:focus-within{border-color:#6090f5;box-shadow:0 0 0 3px #2563eb18}
+.commission-rate-input-wrap input{width:100%;min-width:0;border:0;outline:0;padding:10px 11px;font:inherit;font-size:13px;color:#0f172a;background:transparent}
+.commission-rate-input-wrap span{padding:0 12px;color:#64748b;font-size:12px}
+.commission-rate-example{font-size:10px;line-height:1.5;color:#64748b}
+.commission-rate-save{white-space:nowrap}
+.commission-rate-message{grid-column:1/-1;margin:0}
+@media(max-width:760px){.commission-rate-row{grid-template-columns:minmax(0,1fr);gap:12px;padding:13px}.commission-rate-save{width:100%}.commission-policy-summary{padding:13px}}
