@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/initial-pos-foundation
+      - feat/per-barber-commission-config
   pull_request:
     branches:
       - main
@@ -82,40 +83,20 @@ jobs:
               END IF;
             END LOOP;
 
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_cash_shift_device_branch' AND NOT tgisinternal
-            ) THEN RAISE EXCEPTION 'Cash shift integrity trigger missing'; END IF;
-
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_sale_shift_device_branch' AND NOT tgisinternal
-            ) THEN RAISE EXCEPTION 'Sale integrity trigger missing'; END IF;
-
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_commission_entry_matches_sale_item' AND NOT tgisinternal
-            ) THEN RAISE EXCEPTION 'Commission integrity trigger missing'; END IF;
-
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_finalized_sale_item_snapshot' AND NOT tgisinternal
-            ) THEN RAISE EXCEPTION 'Sale-item immutability trigger missing'; END IF;
-
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_sale_status_transition' AND NOT tgisinternal
-            ) THEN RAISE EXCEPTION 'Sale status transition trigger missing'; END IF;
-
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_payment_status_transition' AND NOT tgisinternal
-            ) THEN RAISE EXCEPTION 'Payment status transition trigger missing'; END IF;
-
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_qris_pending_sale_item' AND NOT tgisinternal
-            ) THEN RAISE EXCEPTION 'QRIS pending sale-item lock trigger missing'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_cash_shift_device_branch' AND NOT tgisinternal)
+              THEN RAISE EXCEPTION 'Cash shift integrity trigger missing'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_sale_shift_device_branch' AND NOT tgisinternal)
+              THEN RAISE EXCEPTION 'Sale integrity trigger missing'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_commission_entry_matches_sale_item' AND NOT tgisinternal)
+              THEN RAISE EXCEPTION 'Commission integrity trigger missing'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_finalized_sale_item_snapshot' AND NOT tgisinternal)
+              THEN RAISE EXCEPTION 'Sale-item immutability trigger missing'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_sale_status_transition' AND NOT tgisinternal)
+              THEN RAISE EXCEPTION 'Sale status transition trigger missing'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_payment_status_transition' AND NOT tgisinternal)
+              THEN RAISE EXCEPTION 'Payment status transition trigger missing'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_qris_pending_sale_item' AND NOT tgisinternal)
+              THEN RAISE EXCEPTION 'QRIS pending sale-item lock trigger missing'; END IF;
           END
           $$;
           SQL
@@ -123,41 +104,39 @@ jobs:
       - name: Verify tenant and branch isolation under authenticated role
         env:
           PGPASSWORD: postgres
-        run: |
-          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/rls_smoke_test.sql
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/rls_smoke_test.sql
 
       - name: Verify service pricing RPC guardrails
         env:
           PGPASSWORD: postgres
-        run: |
-          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/service_pricing_smoke_test.sql
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/service_pricing_smoke_test.sql
+
+      - name: Verify per-barber commission configuration and audit trail
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/commission_config_smoke_test.sql
 
       - name: Verify checkout idempotency and QRIS pending state
         env:
           PGPASSWORD: postgres
-        run: |
-          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/checkout_smoke_test.sql
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/checkout_smoke_test.sql
 
       - name: Verify payment confirmation and offline sync write boundaries
         env:
           PGPASSWORD: postgres
-        run: |
-          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/payment_sync_security_boundary_test.sql
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/payment_sync_security_boundary_test.sql
 
       - name: Verify trusted QRIS event permissions and idempotency
         env:
           PGPASSWORD: postgres
-        run: |
-          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/qris_trusted_event_smoke_test.sql
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/qris_trusted_event_smoke_test.sql
 
       - name: Verify QRIS state transitions and sale-item locking
         env:
           PGPASSWORD: postgres
-        run: |
-          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/qris_state_transition_test.sql
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/qris_state_transition_test.sql
 
       - name: Verify cash shift close and reconciliation
         env:
           PGPASSWORD: postgres
-        run: |
-          psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/cash_shift_close_test.sql
+        run: psql -h localhost -U postgres -d barber_pos_test -v ON_ERROR_STOP=1 -f tests/sql/cash_shift_close_test.sql
