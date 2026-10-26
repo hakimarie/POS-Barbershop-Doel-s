@@ -2,7 +2,7 @@ name: Frontend Validation
 
 on:
   push:
-    branches: [feat/initial-pos-foundation]
+    branches: [feat/initial-pos-foundation, feat/per-barber-commission-config]
   pull_request:
     branches: [main]
 
