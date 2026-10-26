@@ -40,7 +40,7 @@ export default async function SettingsPage() {
     { title: "Cabang, tim & komisi", items: [
       { title: "Cabang & Kursi", description: "Kelola outlet, perangkat, dan kapasitas kursi/station.", status: `${branchCount ?? "—"} cabang aktif`, href: "/cabang", icon: "⌖" },
       { title: "Kapster & Kasir", description: "Kelola data kapster, penugasan cabang, akun kasir, dan hak akses.", status: `${barberCount ?? "—"} kapster aktif · ${cashierCount ?? "—"} akun kasir aktif`, href: "/barber", icon: "♙" },
-      { title: "Aturan Komisi", description: "Atur skema bagi hasil jasa berdasarkan persentase atau nominal tetap.", status: "Komisi persentase adalah aturan MVP · konfigurasi belum tersedia", icon: "%" },
+      { title: "Aturan Komisi", description: "Atur skema bagi hasil jasa berdasarkan persentase atau nominal tetap.", status: "Tarif persentase per barber · 30% kebijakan awal", href: "/pengaturan/komisi", icon: "%" },
     ]},
     { title: "Notifikasi dan keamanan", items: [
       { title: "Notifikasi WhatsApp", description: "Pengingat booking otomatis dan pengiriman struk digital.", status: "Belum tersedia", icon: "◉" },
