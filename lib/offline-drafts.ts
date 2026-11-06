@@ -56,51 +56,90 @@ function readLegacyDrafts(storageKey: string): OfflineDraftRecord[] {
   }
 }
 
+function runDraftTransaction<T>(
+  databaseName: string,
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore, resolve: (value: T) => void, reject: (reason: Error) => void) => void,
+): Promise<T> {
+  return openDraftDatabase(databaseName).then((db) => new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const tx = db.transaction(STORE_NAME, mode);
+    const finish = (value: T) => {
+      if (settled) return;
+      settled = true;
+      db.close();
+      resolve(value);
+    };
+    const fail = (reason: Error) => {
+      if (settled) return;
+      settled = true;
+      db.close();
+      reject(reason);
+    };
+    tx.oncomplete = () => {
+      if (!settled) finish(undefined as T);
+    };
+    tx.onerror = () => fail(tx.error ?? new Error("Transaksi penyimpanan draft gagal."));
+    tx.onabort = () => fail(tx.error ?? new Error("Transaksi penyimpanan draft dibatalkan."));
+    try {
+      run(tx.objectStore(STORE_NAME), finish, fail);
+    } catch (error) {
+      tx.abort();
+      fail(error instanceof Error ? error : new Error("Operasi draft gagal."));
+    }
+  }));
+}
+
 export async function loadOfflineDrafts(storageKey: string): Promise<OfflineDraftRecord[]> {
   try {
-    const db = await openDraftDatabase(storageKey);
-    const rows = await new Promise<OfflineDraftRecord[]>((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, "readonly");
-      const request = tx.objectStore(STORE_NAME).getAll();
+    const rows = await runDraftTransaction<OfflineDraftRecord[]>(storageKey, "readonly", (store, resolve, reject) => {
+      const request = store.getAll();
       request.onsuccess = () => resolve(request.result as OfflineDraftRecord[]);
       request.onerror = () => reject(request.error ?? new Error("Gagal membaca draft."));
-      tx.oncomplete = () => db.close();
-      tx.onerror = () => reject(tx.error ?? new Error("Gagal membaca draft."));
     });
     if (rows.length) return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-    // Migrate drafts created by the previous localStorage implementation.
+    // Import legacy localStorage records without clearing any IndexedDB data.
     const legacy = readLegacyDrafts(storageKey);
     if (legacy.length) {
       await saveOfflineDrafts(storageKey, legacy);
-      try { window.localStorage.removeItem(storageKey); } catch { /* Keep IndexedDB copy. */ }
+      try { window.localStorage.removeItem(storageKey); } catch { /* IndexedDB copy remains authoritative. */ }
     }
     return legacy.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   } catch {
+    // Do not silently pretend that localStorage is a writable fallback.
+    // It is read only here to allow recovery/export of older drafts.
     return readLegacyDrafts(storageKey).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 }
 
+/**
+ * Upsert only the supplied transaction IDs. Never clear the object store:
+ * separate tabs and overlapping writes must not erase unrelated drafts.
+ */
 export async function saveOfflineDrafts(storageKey: string, drafts: OfflineDraftRecord[]): Promise<void> {
   const normalized = drafts.filter((draft) => Boolean(draft.transactionId));
-  const db = await openDraftDatabase(storageKey);
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    store.clear();
-    for (const draft of normalized) store.put(draft);
-    tx.oncomplete = () => { db.close(); resolve(); };
-    tx.onerror = () => { db.close(); reject(tx.error ?? new Error("Gagal menyimpan draft.")); };
-    tx.onabort = () => { db.close(); reject(tx.error ?? new Error("Penyimpanan draft dibatalkan.")); };
+  if (!normalized.length) return;
+  await runDraftTransaction<void>(storageKey, "readwrite", (store, _resolve, reject) => {
+    for (const draft of normalized) {
+      const request = store.put(draft);
+      request.onerror = () => reject(request.error ?? new Error("Gagal menyimpan draft."));
+    }
   });
 }
 
+export async function removeOfflineDraft(storageKey: string, transactionId: string): Promise<void> {
+  if (!transactionId) throw new Error("ID transaksi wajib diisi.");
+  await runDraftTransaction<void>(storageKey, "readwrite", (store, _resolve, reject) => {
+    const request = store.delete(transactionId);
+    request.onerror = () => reject(request.error ?? new Error("Gagal menghapus draft."));
+  });
+}
+
+/** Administrative cleanup only; normal cashier flows must delete by ID. */
 export async function removeOfflineDrafts(storageKey: string): Promise<void> {
-  const db = await openDraftDatabase(storageKey);
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).clear();
-    tx.oncomplete = () => { db.close(); resolve(); };
-    tx.onerror = () => { db.close(); reject(tx.error ?? new Error("Gagal membersihkan draft.")); };
+  await runDraftTransaction<void>(storageKey, "readwrite", (store, _resolve, reject) => {
+    const request = store.clear();
+    request.onerror = () => reject(request.error ?? new Error("Gagal membersihkan draft."));
   });
 }
