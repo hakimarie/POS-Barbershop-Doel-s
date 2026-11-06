@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition, type FormEvent } from "react";
 import Image from "next/image";
 import { checkoutSale, type CheckoutResult } from "@/app/actions/checkout";
-import { loadOfflineDrafts, saveOfflineDrafts, type OfflineDraftRecord } from "@/lib/offline-drafts";
+import { loadOfflineDrafts, saveOfflineDrafts, removeOfflineDraft, type OfflineDraftRecord } from "@/lib/offline-drafts";
 
 type Branch = { id: string; code: string; name: string };
 type Device = { id: string; branch_id: string; device_code: string; device_name: string };
@@ -58,11 +58,25 @@ export default function CheckoutForm(props: {
 
   async function saveDrafts(next: OfflineDraft[]) {
     try {
+      // Upsert by transaction ID. Never clear unrelated drafts from another tab.
       await saveOfflineDrafts(props.storageKey, next);
-      setOfflineDrafts(next);
+      setOfflineDrafts((current) => {
+        const byId = new Map(current.map((draft) => [draft.transactionId, draft]));
+        for (const draft of next) byId.set(draft.transactionId, draft);
+        return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      });
     } catch {
       setOfflineNotice("Penyimpanan draft lokal gagal. Jangan tutup halaman; catat transaksi secara manual sesuai SOP.");
       throw new Error("Penyimpanan draft lokal gagal");
+    }
+  }
+
+  async function deleteDraft(transactionIdToDelete: string) {
+    try {
+      await removeOfflineDraft(props.storageKey, transactionIdToDelete);
+      setOfflineDrafts((current) => current.filter((draft) => draft.transactionId !== transactionIdToDelete));
+    } catch {
+      setOfflineNotice("Draft belum terhapus dari penyimpanan lokal. Periksa penyimpanan perangkat dan coba lagi.");
     }
   }
 
@@ -109,7 +123,7 @@ export default function CheckoutForm(props: {
         setReceiptSnapshot({ branchName: props.branches.find((item) => item.id === branchId)?.name ?? "Cabang", branchCode: props.branches.find((item) => item.id === branchId)?.code ?? "", deviceName: props.devices.find((item) => item.id === deviceId)?.device_name ?? "Kasir", serviceName: props.services.find((item) => item.id === serviceId)?.name ?? "Layanan", barberName: props.barbers.find((item) => item.id === barberId)?.full_name ?? "Barber", quantity: Number(quantity), paymentMethod: method, issuedAt: new Date().toISOString() });
       }
       if (response.ok) {
-        void saveDrafts(offlineDrafts.filter((item) => item.transactionId !== transactionId)).catch(() => undefined);
+        void deleteDraft(transactionId);
         setTransactionId(crypto.randomUUID()); setQuantity("1"); setServiceId(""); setBarberId("");
       }
     });
@@ -201,7 +215,7 @@ export default function CheckoutForm(props: {
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}>Muat & periksa</button>
               <button type="button" className="draft-remove" onClick={() => {
-                void saveDrafts(offlineDrafts.filter((item) => item.transactionId !== draft.transactionId)).catch(() => undefined);
+                void deleteDraft(draft.transactionId);
               }} aria-label="Hapus draft">Hapus</button>
             </div>
           </article>
