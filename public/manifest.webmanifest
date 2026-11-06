@@ -5,7 +5,17 @@
   "description": "Sistem kasir multi-cabang Doel's Barbershop",
   "lang": "id-ID",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f7f8fb",
-  "theme_color": "#111827"
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
